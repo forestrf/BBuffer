@@ -256,12 +256,12 @@ namespace BBuffer {
 
 
 		public void Put(byte[] src, int srcOffset, int length) {
-			Buffer.BlockCopy(src, absOffset + srcOffset, data, absPosition, length);
+			Buffer.BlockCopy(src, srcOffset, data, absPosition, length);
 			absPosition += length;
 			UpdateDataSize(absPosition);
 		}
 		public void Put(ByteBuffer src, int srcOffset, int length) {
-			Buffer.BlockCopy(src.data, src.absOffset + absOffset + srcOffset, data, absPosition, length);
+			Buffer.BlockCopy(src.data, src.absOffset + srcOffset, data, absPosition, length);
 			absPosition += length;
 			UpdateDataSize(absPosition);
 		}
