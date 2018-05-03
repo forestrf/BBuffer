@@ -26,7 +26,7 @@ namespace BBuffer {
 		/// Position of the 0-index for this section inside <see cref="data"/>
 		/// </summary>
 		public int absOffset;
-
+		
 		/// <summary>
 		/// usable bytes in <see cref="data"/> from 0
 		/// </summary>
@@ -439,6 +439,15 @@ namespace BBuffer {
 		public void GetBytes(byte[] dst, int dstOffset, int lenght) {
 			Buffer.BlockCopy(data, absPosition, dst, dstOffset, lenght);
 			absPosition += lenght;
+		}
+
+		public ByteBuffer GetBuffer(int length) {
+			ByteBuffer b = new ByteBuffer(data, absPosition, length);
+			absPosition += length;
+			return b;
+		}
+		public ByteBuffer GetBufferAt(int offset, int length) {
+			return new ByteBuffer(data, absOffset + offset, length);
 		}
 		#endregion
 	}
