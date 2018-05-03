@@ -102,6 +102,14 @@ namespace BBuffer {
 			return null != data;
 		}
 
+		/// <summary>
+		/// Set the position to a multiple of 4, advancing it if only if needed 
+		/// </summary>
+		public void Pad4() {
+			int padding = (4 - (Position & 0x3)) & 0x3;
+			Position += padding;
+		}
+
 		#region PutMethods
 		void UpdateDataSize(int position) {
 			if (position > Length) Length = position;
