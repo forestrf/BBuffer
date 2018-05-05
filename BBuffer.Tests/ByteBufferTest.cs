@@ -61,7 +61,7 @@ namespace BBufferTests {
 							b.Put(1.5152749180821361E-13d);
 						}
 
-						Assert.IsTrue(b.GetCropToCurrentPosition().BufferEquals(new ByteBuffer(expectedMessage)), "off=" + off + ", len=" + len + ", endian=" + e);
+						Assert.IsTrue(b.FromStartToPosition().BufferEquals(new ByteBuffer(expectedMessage)), "off=" + off + ", len=" + len + ", endian=" + e);
 
 						Assert.AreEqual(off + expectedMessage.Length, b.absPosition);
 						Assert.AreEqual(off, b.absOffset);

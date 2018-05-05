@@ -69,10 +69,17 @@ namespace BBuffer {
 			return absLength - absPosition;
 		}
 
-		public ByteBuffer GetCropToCurrentPosition() {
+		public ByteBuffer FromStartToPosition() {
 			ByteBuffer b = new ByteBuffer(data);
 			b.absOffset = b.absPosition = absOffset;
 			b.absLength = absPosition;
+			return b;
+		}
+		
+		public ByteBuffer FromHereToEnd() {
+			ByteBuffer b = new ByteBuffer(data);
+			b.absOffset = b.absPosition = absPosition;
+			b.absLength = absLength;
 			return b;
 		}
 
@@ -430,31 +437,31 @@ namespace BBuffer {
 
 
 		public void GetBytes(int srcOffset, byte[] dst) {
-			GetBytes(srcOffset, dst, dst.Length);
+			GetBytes(srcOffset, dst, (ushort) dst.Length);
 		}
-		public void GetBytes(int srcOffset, byte[] dst, int lenght) {
+		public void GetBytes(int srcOffset, byte[] dst, ushort lenght) {
 			GetBytes(srcOffset, dst, 0, lenght);
 		}
-		public void GetBytes(int srcOffset, byte[] dst, int dstOffset, int lenght) {
+		public void GetBytes(int srcOffset, byte[] dst, int dstOffset, ushort lenght) {
 			Buffer.BlockCopy(data, absOffset + srcOffset, dst, dstOffset, lenght);
 		}
 		public void GetBytes(byte[] dst) {
-			GetBytes(dst, dst.Length);
+			GetBytes(dst, (ushort) dst.Length);
 		}
-		public void GetBytes(byte[] dst, int lenght) {
+		public void GetBytes(byte[] dst, ushort lenght) {
 			GetBytes(dst, 0, lenght);
 		}
-		public void GetBytes(byte[] dst, int dstOffset, int lenght) {
+		public void GetBytes(byte[] dst, int dstOffset, ushort lenght) {
 			Buffer.BlockCopy(data, absPosition, dst, dstOffset, lenght);
 			absPosition += lenght;
 		}
 
-		public ByteBuffer GetBuffer(int length) {
+		public ByteBuffer GetBuffer(ushort length) {
 			ByteBuffer b = new ByteBuffer(data, absPosition, length);
 			absPosition += length;
 			return b;
 		}
-		public ByteBuffer GetBufferAt(int offset, int length) {
+		public ByteBuffer GetBufferAt(int offset, ushort length) {
 			return new ByteBuffer(data, absOffset + offset, length);
 		}
 		#endregion
