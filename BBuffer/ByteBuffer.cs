@@ -7,6 +7,8 @@ namespace BBuffer {
 	/// Because it is an struct, you don't need to pool it but you may need to pass it to other methods using the ref keyword
 	/// </summary>
 	public struct ByteBuffer {
+		public static readonly byte[] ZeroLengthBuffer = new byte[0];
+
 		/// <summary>
 		/// Endianness of the buffer. STUN uses big endian (Network bit order)
 		/// </summary>
@@ -276,6 +278,7 @@ namespace BBuffer {
 			UpdateDataSize(absPosition);
 		}
 		public void Put(ByteBuffer src, int srcOffset, int length) {
+			if (!src.HasData() || 0 == data.Length || 0 == length) return;
 			Buffer.BlockCopy(src.data, src.absOffset + srcOffset, data, absPosition, length);
 			absPosition += length;
 			UpdateDataSize(absPosition);
@@ -284,6 +287,7 @@ namespace BBuffer {
 			Put(data, 0, data.Length);
 		}
 		public void Put(ByteBuffer data) {
+			if (!data.HasData() || 0 == data.Length) return; 
 			Put(data, 0, data.Length);
 		}
 		#endregion
