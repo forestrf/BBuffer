@@ -159,6 +159,13 @@ namespace BBuffer {
 			UpdateDataSize(offset + absOffset + bitCount);
 		}
 
+		public void Put(bool value) {
+			Put(value ? (byte) 1 : (byte) 0, 1);
+		}
+		public void PutAt(int offset, bool value) {
+			PutAt(offset, value ? (byte) 1 : (byte) 0, 1);
+		}
+
 		public void Put(short value, int bitCount = sizeof(short) * 8) {
 			new FastBit.UShort((ushort) value).Write(data, absPosition, bitCount);
 			absPosition += bitCount;
@@ -354,6 +361,13 @@ namespace BBuffer {
 		}
 		public byte GetByteAt(int offset, int bitCount = sizeof(byte) * 8) {
 			return FastBit.Byte.Read(data, absOffset + offset, bitCount);
+		}
+
+		public bool GetBool() {
+			return 1 == GetByte(1);
+		}
+		public bool GetBoolAt(int offset) {
+			return 1 == GetByteAt(offset, 1);
 		}
 
 		public short GetShort(int bitCount = sizeof(short) * 8) {
