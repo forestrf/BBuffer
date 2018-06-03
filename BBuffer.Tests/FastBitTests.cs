@@ -1,5 +1,6 @@
 ﻿using BBuffer;
 using NUnit.Framework;
+using System;
 
 namespace BBufferTests {
 	[TestFixture]
@@ -165,6 +166,32 @@ namespace BBufferTests {
 						sb.Write(testArr, offset, bits);
 						ff.Write(testArr, offset - bits, bits); // write behind, trying to override
 						Assert.AreEqual(a & mask, new FastBit.ULong().Read(testArr, offset, bits), "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void TestGetBytes() {
+			for (int i = 0; i < 20; i++) {
+				BitBuffer b = new BitBuffer(new byte[256], i, 700);
+				Random r = new Random(0);
+				for (int j = 0; j < 15; j++) {
+					int expected = r.Next();
+					b.Put(expected);
+					Assert.AreEqual(expected, b.GetIntAt(32 * j));
+				}
+
+				for (int k = 0; k < 20; k++) {
+					byte[] clon = new byte[256];
+					b.GetBytes(clon, k, 700);
+					BitBuffer b2 = new BitBuffer(clon);
+
+					r = new Random(0);
+					for (int j = 0; j < 15; j++) {
+						int expected = r.Next();
+						int read = b2.GetInt();
+						Assert.AreEqual(expected, read, "offset source=" + i + ", ofset destination=" + k + ", number=" + j);
 					}
 				}
 			}

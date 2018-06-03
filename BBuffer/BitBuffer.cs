@@ -30,6 +30,10 @@ namespace BBuffer {
 
 
 		public BitBuffer(byte[] buffer) : this(buffer, 0, null != buffer ? buffer.Length * 8 : 0) { }
+		/// <param name="offset">in bits</param>
+		public BitBuffer(byte[] buffer, int offset) : this(buffer, offset, null != buffer ? buffer.Length * 8 - offset : 0) { }
+		/// <param name="offset">in bits</param>
+		/// <param name="length">in bits</param>
 		public BitBuffer(byte[] buffer, int offset, int length) : this() {
 			data = buffer;
 			absPosition = offset;
@@ -102,21 +106,7 @@ namespace BBuffer {
 		/// </summary>
 		public byte[] ToArray() {
 			byte[] copy = new byte[(int) Math.Ceiling(Length / 8f)];
-			int shift = 0x7 & absOffset;
-			if (0 == shift) {
-				Buffer.BlockCopy(data, absOffset / 8, copy, 0, copy.Length);
-			}
-			else {
-				for (int i = 0; i < copy.Length; i++) {
-					copy[i] = (byte) (
-						data[absOffset / 8 + i] >> shift |
-						data[absOffset / 8 + i + 1] << (8 - shift)
-					);
-				}
-			}
-			if (0 != (0x7 & Length)) {
-				copy[Length / 8] &= (byte) (1 << (0x7 & Length) - 1);
-			}
+			GetBytes(copy, 0, copy.Length);
 			return copy;
 		}
 
@@ -327,29 +317,30 @@ namespace BBuffer {
 			}
 		}
 		public void PutAt(BitBuffer src, int srcBitOffset, int dstBitOffset, int bitLength) {
-			bool srcArrIsByteAligned = 0 == (0x7 & (src.absOffset + srcBitOffset));
+			src.absOffset += srcBitOffset;
+			bool srcArrIsByteAligned = 0 == (0x7 & src.absOffset);
 			bool dstArrIsByteAligned = 0 == (0x7 & (absOffset + dstBitOffset));
 			if (srcArrIsByteAligned && dstArrIsByteAligned) {
-				Buffer.BlockCopy(src.data, (src.absOffset + srcBitOffset) / 8, data, (absOffset + dstBitOffset) / 8, bitLength / 8);
+				Buffer.BlockCopy(src.data, src.absOffset / 8, data, (absOffset + dstBitOffset) / 8, bitLength / 8);
 				absPosition += (bitLength / 8) * 8;
 			}
 			else {
 				for (int i = 0; i < bitLength / 8; i++) {
-					Put(src.GetByte(srcBitOffset));
+					Put(src.GetByte());
 				}
 			}
 			if (0 != (0x7 & bitLength)) {
 				// last byte is not aligned and has to be copied manually
-				Put(src.data, src.data[(src.absOffset + srcBitOffset + bitLength) / 8], 0x7 & bitLength);
+				Put(src.data, src.data[(src.absOffset + bitLength) / 8], 0x7 & bitLength);
 			}
 			absPosition += bitLength;
 			UpdateDataSize(absPosition);
 		}
-		public void Put(byte[] data) {
-			Put(data, 0, data.Length);
+		public void Put(byte[] v) {
+			Put(v, 0, v.Length);
 		}
-		public void Put(BitBuffer data) {
-			PutAt(data, 0, absPosition, data.Length);
+		public void Put(BitBuffer bb) {
+			PutAt(bb, 0, absPosition, bb.Length);
 		}
 		#endregion
 
@@ -450,26 +441,14 @@ namespace BBuffer {
 			return !BitConverter.IsLittleEndian ? f.GetReversed() : f.value;
 		}
 
-		public void GetBytes(int srcOffset, byte[] destination) {
-			GetBytes(srcOffset, destination, destination.Length);
+		/// <param name="srcOffset">in bits</param>
+		/// <param name="dstOffset">in bits</param>
+		/// <param name="destination">target of the copy, a non null array with enough length</param>
+		/// <param name="lenght">in bits</param>
+		public void GetBytes(byte[] destination, int dstOffset, int lenght) {
+			var toPut = new BitBuffer(data, absOffset, Math.Min(lenght, Length));
+			new BitBuffer(destination, 0).Put(toPut);
 		}
-		public void GetBytes(int srcOffset, byte[] destination, int lenght) {
-			GetBytes(srcOffset, destination, 0, lenght);
-		}
-		public void GetBytes(int srcOffset, byte[] destination, int dstOffset, int lenght) {
-			Buffer.BlockCopy(data, absOffset + srcOffset, destination, dstOffset, lenght);
-		}
-		public void GetBytes(byte[] destination) {
-			GetBytes(destination, destination.Length);
-		}
-		public void GetBytes(byte[] destination, int lenght) {
-			GetBytes(destination, 0, lenght);
-		}
-		public void GetBytes(byte[] destination, int offset, int lenght) {
-			Buffer.BlockCopy(data, absPosition, destination, offset, lenght);
-			absPosition += lenght;
-		}
-
 
 		public int GetIntVariableLength() {
 			uint zigzag = GetUIntVariableLength();
