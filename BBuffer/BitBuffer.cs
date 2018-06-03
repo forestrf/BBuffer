@@ -441,13 +441,19 @@ namespace BBuffer {
 			return !BitConverter.IsLittleEndian ? f.GetReversed() : f.value;
 		}
 
-		/// <param name="srcOffset">in bits</param>
 		/// <param name="dstOffset">in bits</param>
 		/// <param name="destination">target of the copy, a non null array with enough length</param>
 		/// <param name="lenght">in bits</param>
 		public void GetBytes(byte[] destination, int dstOffset, int lenght) {
 			var toPut = new BitBuffer(data, absOffset, Math.Min(lenght, Length));
 			new BitBuffer(destination, 0).Put(toPut);
+		}
+
+		/// <param name="length">in bits</param>
+		public BitBuffer GetBytes(int length) {
+			BitBuffer b = new BitBuffer(data, absPosition, length);
+			absPosition += length;
+			return b;
 		}
 
 		public int GetIntVariableLength() {
