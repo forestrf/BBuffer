@@ -114,5 +114,20 @@ namespace BBufferTests {
 				}
 			}
 		}
+
+		[Test]
+		public void TestBitBufferPut() {
+			BitBuffer b = new BitBuffer(new byte[2000]);
+			b.Put(new BitBuffer(b.data, 0, 1));
+			b.Put(new BitBuffer(b.data, 1, 1));
+			b.Put(new BitBuffer(b.data, 2, 2));
+			b.Put(new BitBuffer(b.data, 2, 7));
+			b.Put(new BitBuffer(b.data, 2, 20));
+			Assert.AreEqual(31, b.Position);
+
+			b.PutAt(31, new BitBuffer(b.data, 0, 10));
+			b.PutAt(31, new BitBuffer(b.data, 3, 10));
+			Assert.AreEqual(31, b.Position);
+		}
 	}
 }
