@@ -307,7 +307,7 @@ namespace BBuffer {
 		public void Put(byte[] src, int srcOffset, int lengthBytes) {
 			if (0 == (0x7 & absPosition)) {
 				Buffer.BlockCopy(src, srcOffset, data, absPosition / 8, lengthBytes);
-				absPosition += lengthBytes;
+				absPosition += lengthBytes * 8;
 				UpdateDataSize(absPosition);
 			}
 			else {
