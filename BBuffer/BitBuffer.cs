@@ -100,6 +100,9 @@ namespace BBuffer {
 		public void Rewind() {
 			absPosition = 0;
 		}
+		public void Rewind(int bits) {
+			absPosition -= bits;
+		}
 
 		/// <summary>
 		/// Needs testing
@@ -288,6 +291,27 @@ namespace BBuffer {
 			return bytes;
 		}
 
+		public int BitsNeededForVariableLength(int value) {
+			uint zigzag = (uint) (value << 1) ^ (uint) (value >> (sizeof(int) * 8 - 1));
+			return BitsNeededForVariableLength(zigzag);
+		}
+		public int BitsNeededForVariableLength(long value) {
+			ulong zigzag = (ulong) (value << 1) ^ (ulong) (value >> (sizeof(long) * 8 - 1));
+			return BitsNeededForVariableLength(zigzag);
+		}
+		public int BitsNeededForVariableLength(uint value) {
+			return BitsNeededForVariableLength((ulong) value);
+		}
+		public int BitsNeededForVariableLength(ulong value) {
+			int bytes = 0;
+			while (value >= 0x80) {
+				bytes++;
+				value >>= 7;
+			}
+			bytes++;
+			return bytes * 8;
+		}
+
 
 		public void PutDeltaCompress(int value, int previousValue) {
 			PutVariableLength(value - previousValue);
@@ -302,7 +326,72 @@ namespace BBuffer {
 		public void PutDeltaCompressAt(int offset, long value, long previousValue) {
 			PutVariableLengthAt(offset, value - previousValue);
 		}
+		
 
+		public void PutRanged(float value, float min, float max, int numberOfBits) {
+			PutRangedAt(absPosition, value, min, max, numberOfBits);
+			absPosition += numberOfBits;
+		}
+		public void PutRangedAt(int offset, float value, float min, float max, int numberOfBits) {
+			if (0 == numberOfBits) return;
+			double unit = (value - min) / (max - min);
+			uint maxVal = uint.MaxValue >> (32 - numberOfBits);
+			PutAt(offset, (uint) Math.Round(unit * maxVal), numberOfBits);
+		}
+
+		public void PutRanged(int value, int min, int max) {
+			int numberOfBits;
+			PutRangedAt(absPosition, value, min, max, out numberOfBits);
+		}
+		public void PutRanged(int value, int min, int max, out int numberOfBits) {
+			PutRangedAt(absPosition, value, min, max, out numberOfBits);
+			absPosition += numberOfBits;
+		}
+		public void PutRangedAt(int offset, int value, int min, int max) {
+			int numberOfBits;
+			PutRangedAt(offset, value, min, max, out numberOfBits);
+		}
+		public void PutRangedAt(int offset, int value, int min, int max, out int numberOfBits) {
+			numberOfBits = BitsOccupied((uint) (max - min));
+			uint rvalue = (uint) (value - min);
+			PutAt(offset, rvalue, numberOfBits);
+		}
+
+		public void PutRanged(long value, long min, long max) {
+			int numberOfBits;
+			PutRanged(value, min, max, out numberOfBits);
+		}
+		public void PutRanged(long value, long min, long max, out int numberOfBits) {
+			PutRangedAt(absPosition, value, min, max, out numberOfBits);
+			absPosition += numberOfBits;
+		}
+		public void PutRangedAt(int offset, long value, long min, long max) {
+			int numberOfBits;
+			PutRangedAt(offset, value, min, max, out numberOfBits);
+		}
+		public void PutRangedAt(int offset, long value, long min, long max, out int numberOfBits) {
+			numberOfBits = BitsOccupied((ulong) (max - min));
+			ulong rangedValue = (ulong) (value - min);
+			PutAt(offset, rangedValue, numberOfBits);
+		}
+
+		public static int BitsOccupied(uint value) {
+			int bits = 0;
+			while (value > 0) {
+				bits++;
+				value >>= 1;
+			}
+			return bits;
+		}
+		public static int BitsOccupied(ulong value) {
+			int bits = 0;
+			while (value > 0) {
+				bits++;
+				value >>= 1;
+			}
+			return bits;
+		}
+		
 
 		public void Put(byte[] src, int srcOffset, int lengthBytes) {
 			if (0 == (0x7 & absPosition)) {
@@ -526,6 +615,42 @@ namespace BBuffer {
 		public long GetLongDeltaCompressAt(int offset, long previousValue) {
 			int bytes;
 			return GetLongVariableLengthAt(offset, out bytes) + previousValue;
+		}
+
+
+		public float GetRangedFloat(float min, float max, int numberOfBits) {
+			float value = GetRangedFloatAt(absPosition, min, max, numberOfBits);
+			absPosition += numberOfBits;
+			return value;
+		}
+		public float GetRangedFloatAt(int offset, float min, float max, int numberOfBits) {
+			if (0 == numberOfBits) return min;
+			uint maxVal = uint.MaxValue >> (32 - numberOfBits);
+			uint encodedVal = GetUIntAt(offset, numberOfBits);
+			float unit = encodedVal / (float) maxVal;
+			return min + unit * (max - min);
+		}
+
+		public int GetRangedInt(int min, int max) {
+			int numBits = BitsOccupied((uint) (max - min));
+			int rvalue = (int) GetUInt(numBits);
+			return min + rvalue;
+		}
+		public int GetRangedIntAt(int offset, int min, int max) {
+			int numBits = BitsOccupied((uint) (max - min));
+			int rvalue = (int) GetUIntAt(offset, numBits);
+			return min + rvalue;
+		}
+
+		public long GetRangedLong(long min, long max) {
+			int numBits = BitsOccupied((ulong) (max - min));
+			long rvalue = (long) GetUInt(numBits);
+			return min + rvalue;
+		}
+		public long GetRangedLongAt(int offset, long min, long max) {
+			int numBits = BitsOccupied((ulong) (max - min));
+			long rvalue = (long) GetUIntAt(offset, numBits);
+			return min + rvalue;
 		}
 
 		#endregion

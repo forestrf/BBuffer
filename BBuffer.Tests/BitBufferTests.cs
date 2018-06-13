@@ -1,5 +1,6 @@
 ﻿using BBuffer;
 using NUnit.Framework;
+using System;
 
 namespace BBufferTests {
 	[TestFixture]
@@ -128,6 +129,44 @@ namespace BBufferTests {
 			b.PutAt(31, new BitBuffer(b.data, 0, 10));
 			b.PutAt(31, new BitBuffer(b.data, 3, 10));
 			Assert.AreEqual(31, b.Position);
+		}
+
+		[Test]
+		public void BitsOccuplied() {
+			Assert.AreEqual(0, BitBuffer.BitsOccupied(0));
+			for (int i = 0; i < 32; i++) {
+				Assert.AreEqual(i + 1, BitBuffer.BitsOccupied(1u << i));
+			}
+
+			Assert.AreEqual(0, BitBuffer.BitsOccupied(0ul));
+			for (int i = 0; i < 64; i++) {
+				Assert.AreEqual(i + 1, BitBuffer.BitsOccupied(1ul << i));
+			}
+		}
+
+		[Test]
+		public void TestRangedFloat() {
+			BitBuffer b = new BitBuffer(new byte[32]);
+
+			int MIN = -20;
+			int MAX = 20;
+
+			int minBits = BitBuffer.BitsOccupied((uint) (MAX - MIN));
+
+			for (int bits = 32; bits >= minBits; bits--) {
+				for (float min = MIN; min < MAX; min++) {
+					for (float max = min; max < MAX; max++) {
+						for (float f = min; f <= max; f++) {
+							var bWrite = b;
+							var bRead = b;
+							bWrite.PutRanged(f, min, max, bits);
+							float expected = bRead.GetRangedFloat(min, max, bits);
+
+							Assert.AreEqual(f, Math.Round(expected), "expected=" + f + " actual=" + expected + "\nbits=" + bits + "\nmin=" + min + "\nmax=" + max);
+						}
+					}
+				}
+			}
 		}
 	}
 }
