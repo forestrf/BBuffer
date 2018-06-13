@@ -197,6 +197,31 @@ namespace BBufferTests {
 			}
 		}
 
+		[Test]
+		public void TestByteWithOffset() {
+			for (int i = 0; i < 16; i++) {
+				var b = new BitBuffer(new byte[3], i);
+				for (int j = 0; j < 255; j++) {
+					for (int k = 0; k < 8; k++) {
+						var bWrite = b;
+						var bRead = b;
+						bWrite.Put((byte) j, k);
+						Assert.AreEqual(j & ((1 << k) - 1), bRead.GetByte(k), "bits=" + k + ", offset=" + i);
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void TestBitInLastByte() {
+			var b = new BitBuffer(new byte[1], 7);
+			b.GetBool();
+			for (int i = 0; i < 8; i++) {
+				b = new BitBuffer(new byte[1], i);
+				b.GetByte(8 - i);
+			}
+		}
+
 		static ulong Mask(int bits) {
 			return bits == 64 ? 0xffffffffffffffff : ~(0xffffffffffffffff << bits);
 		}

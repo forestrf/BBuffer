@@ -400,7 +400,8 @@ namespace BBuffer {
 				}
 				else {
 					value = (byte) (buffer[bitOffset / 8] >> bitOffsetInByte);
-					value |= (byte) (buffer[bitOffset / 8 + 1] << (8 - bitOffsetInByte));
+					if (bitCount > 8 - bitOffsetInByte)
+						value |= (byte) (buffer[bitOffset / 8 + 1] << (8 - bitOffsetInByte));
 				}
 				return bitCount >= 8 ? value : (byte) (value & ((1 << bitCount) - 1));
 			}
