@@ -329,7 +329,7 @@ namespace BBuffer {
 		
 
 		public void PutRanged(float value, float min, float max, int numberOfBits) {
-			PutRangedAt(absPosition, value, min, max, numberOfBits);
+			PutRangedAt(Position, value, min, max, numberOfBits);
 			absPosition += numberOfBits;
 		}
 		public void PutRangedAt(int offset, float value, float min, float max, int numberOfBits) {
@@ -619,7 +619,7 @@ namespace BBuffer {
 
 
 		public float GetRangedFloat(float min, float max, int numberOfBits) {
-			float value = GetRangedFloatAt(absPosition, min, max, numberOfBits);
+			float value = GetRangedFloatAt(Position, min, max, numberOfBits);
 			absPosition += numberOfBits;
 			return value;
 		}

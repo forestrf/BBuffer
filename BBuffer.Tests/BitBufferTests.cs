@@ -146,23 +146,34 @@ namespace BBufferTests {
 
 		[Test]
 		public void TestRangedFloat() {
-			BitBuffer b = new BitBuffer(new byte[32]);
+			BitBuffer b = new BitBuffer(new byte[1200]);
 
-			int MIN = -20;
-			int MAX = 20;
+			int MIN = -10;
+			int MAX = 10;
 
 			int minBits = BitBuffer.BitsOccupied((uint) (MAX - MIN));
 
-			for (int bits = 32; bits >= minBits; bits--) {
-				for (float min = MIN; min < MAX; min++) {
-					for (float max = min; max < MAX; max++) {
-						for (float f = min; f <= max; f++) {
-							var bWrite = b;
-							var bRead = b;
-							bWrite.PutRanged(f, min, max, bits);
-							float expected = bRead.GetRangedFloat(min, max, bits);
+			for (int absOffset = 0; absOffset < 8; absOffset++) {
+				b.absOffset = absOffset;
+				for (int bits = 32; bits >= minBits; bits--) {
+					for (float min = MIN; min < MAX; min++) {
+						for (float max = min; max < MAX; max++) {
+							for (float f = min; f <= max; f++) {
+								for (int pos = 0; pos < 8; pos++) {
+									b.Position = pos;
+									var bWrite = b;
+									var bRead = b;
+									bWrite.PutRanged(f, min, max, bits);
+									float expected = bRead.GetRangedFloat(min, max, bits);
 
-							Assert.AreEqual(f, Math.Round(expected), "expected=" + f + " actual=" + expected + "\nbits=" + bits + "\nmin=" + min + "\nmax=" + max);
+									Assert.AreEqual(f, Math.Round(expected), "expected=" + f + " actual=" + expected + "\n" +
+										"bits=" + bits + "\n" +
+										"absOffset=" + absOffset + "\n" +
+										"pos=" + pos + "\n" + 
+										"min=" + min + "\n" +
+										"max=" + max);
+								}
+							}
 						}
 					}
 				}
