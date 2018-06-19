@@ -183,27 +183,35 @@ namespace BBufferTests {
 		[Test]
 		public void TestVariableLength2() {
 			var b = new BitBuffer(new byte[200000]);
-			var bWrite = b;
-			var bRead = b;
 			Random r = new Random(0);
-			for (int i = 0; i < 1000; i++) {
-				int target = new FastByte.Int((byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next()).value;
-				bWrite.PutVariableLength(target);
-				Assert.AreEqual(target, bRead.GetIntVariableLengthAt(bRead.Position));
-				Assert.AreEqual(target, bRead.GetIntVariableLength());
-				bWrite.PutVariableLength((uint) target);
-				Assert.AreEqual((uint) target, bRead.GetUIntVariableLengthAt(bRead.Position));
-				Assert.AreEqual((uint) target, bRead.GetUIntVariableLength());
+			for (int j = 0; j < 4; j++) {
+				var bWrite = b;
+				var bRead = b;
+				for (int i = 0; i < 1000; i++) {
+					int target = new FastByte.Int((byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next()).value;
+					target >>= j * 8;
+					bWrite.PutVariableLength(target);
+					Assert.AreEqual(target, bRead.GetIntVariableLengthAt(bRead.Position));
+					Assert.AreEqual(target, bRead.GetIntVariableLength());
+					bWrite.PutVariableLength((uint) target);
+					Assert.AreEqual((uint) target, bRead.GetUIntVariableLengthAt(bRead.Position));
+					Assert.AreEqual((uint) target, bRead.GetUIntVariableLength());
+				}
 			}
 
-			for (int i = 0; i < 1000; i++) {
-				long target = new FastByte.Long((byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next()).value;
-				bWrite.PutVariableLength(target);
-				Assert.AreEqual(target, bRead.GetLongVariableLengthAt(bRead.Position));
-				Assert.AreEqual(target, bRead.GetLongVariableLength());
-				bWrite.PutVariableLength((ulong) target);
-				Assert.AreEqual((ulong) target, bRead.GetULongVariableLengthAt(bRead.Position));
-				Assert.AreEqual((ulong) target, bRead.GetULongVariableLength());
+			for (int j = 0; j < 8; j++) {
+				var bWrite = b;
+				var bRead = b;
+				for (int i = 0; i < 1000; i++) {
+					long target = new FastByte.Long((byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next()).value;
+					target >>= j * 8;
+					bWrite.PutVariableLength(target);
+					Assert.AreEqual(target, bRead.GetLongVariableLengthAt(bRead.Position));
+					Assert.AreEqual(target, bRead.GetLongVariableLength());
+					bWrite.PutVariableLength((ulong) target);
+					Assert.AreEqual((ulong) target, bRead.GetULongVariableLengthAt(bRead.Position));
+					Assert.AreEqual((ulong) target, bRead.GetULongVariableLength());
+				}
 			}
 		}
 
