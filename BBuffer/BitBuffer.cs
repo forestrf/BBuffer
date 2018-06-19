@@ -548,8 +548,16 @@ namespace BBuffer {
 		}
 
 		public int GetIntVariableLength() {
-			uint zigzag = GetUIntVariableLength();
+			int bytes;
+			return GetIntVariableLength(out bytes);
+		}
+		public int GetIntVariableLength(out int bytes) {
+			uint zigzag = GetUIntVariableLength(out bytes);
 			return (int) ((zigzag >> 1) ^ -(zigzag & 1));
+		}
+		public int GetIntVariableLengthAt(int offset) {
+			int bytes;
+			return GetIntVariableLengthAt(offset, out bytes);
 		}
 		public int GetIntVariableLengthAt(int offset, out int bytes) {
 			uint zigzag = GetUIntVariableLengthAt(offset, out bytes);
@@ -558,18 +566,33 @@ namespace BBuffer {
 
 		public uint GetUIntVariableLength() {
 			int bytes;
+			return GetUIntVariableLength(out bytes);
+		}
+		public uint GetUIntVariableLength(out int bytes) {
 			uint value = GetUIntVariableLengthAt(Position, out bytes);
 			absPosition += bytes * 8;
 			UpdateDataSize(absPosition);
 			return value;
+		}
+		public uint GetUIntVariableLengthAt(int offset) {
+			int bytes;
+			return (uint) GetULongVariableLengthAt(offset, out bytes);
 		}
 		public uint GetUIntVariableLengthAt(int offset, out int bytes) {
 			return (uint) GetULongVariableLengthAt(offset, out bytes);
 		}
 
 		public long GetLongVariableLength() {
-			ulong zigzag = GetULongVariableLength();
+			int bytes;
+			return GetLongVariableLength(out bytes);
+		}
+		public long GetLongVariableLength(out int bytes) {
+			ulong zigzag = GetULongVariableLength(out bytes);
 			return (long) ((zigzag >> 1) ^ (zigzag << (sizeof(long) * 8 - 1)));
+		}
+		public long GetLongVariableLengthAt(int offset) {
+			int bytes;
+			return GetLongVariableLengthAt(offset, out bytes);
 		}
 		public long GetLongVariableLengthAt(int offset, out int bytes) {
 			ulong zigzag = GetULongVariableLengthAt(offset, out bytes);
@@ -578,10 +601,17 @@ namespace BBuffer {
 
 		public ulong GetULongVariableLength() {
 			int bytes;
+			return GetULongVariableLength(out bytes);
+		}
+		public ulong GetULongVariableLength(out int bytes) {
 			ulong value = GetULongVariableLengthAt(Position, out bytes);
 			absPosition += bytes * 8;
 			UpdateDataSize(absPosition);
 			return value;
+		}
+		public ulong GetULongVariableLengthAt(int offset) {
+			int bytes;
+			return GetULongVariableLengthAt(offset, out bytes);
 		}
 		public ulong GetULongVariableLengthAt(int offset, out int bytes) {
 			ulong value = 0;
