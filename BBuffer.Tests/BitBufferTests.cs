@@ -148,8 +148,8 @@ namespace BBufferTests {
 		public void TestRangedFloat() {
 			BitBuffer b = new BitBuffer(new byte[1200]);
 
-			int MIN = -10;
-			int MAX = 10;
+			int MIN = -5;
+			int MAX = 5;
 
 			int minBits = BitBuffer.BitsOccupied((uint) (MAX - MIN));
 
@@ -169,7 +169,7 @@ namespace BBufferTests {
 									Assert.AreEqual(f, Math.Round(expected), "expected=" + f + " actual=" + expected + "\n" +
 										"bits=" + bits + "\n" +
 										"absOffset=" + absOffset + "\n" +
-										"pos=" + pos + "\n" + 
+										"pos=" + pos + "\n" +
 										"min=" + min + "\n" +
 										"max=" + max);
 								}
@@ -178,6 +178,101 @@ namespace BBufferTests {
 					}
 				}
 			}
+		}
+
+		[Test]
+		public void TestVariableLength2() {
+			var b = new BitBuffer(new byte[200000]);
+			var bWrite = b;
+			var bRead = b;
+			Random r = new Random(0);
+			for (int i = 0; i < 1000; i++) {
+				int target = new FastByte.Int((byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next()).value;
+				bWrite.PutVariableLength(target);
+				Assert.AreEqual(target, bRead.GetIntVariableLengthAt(bRead.Position));
+				Assert.AreEqual(target, bRead.GetIntVariableLength());
+				bWrite.PutVariableLength((uint) target);
+				Assert.AreEqual((uint) target, bRead.GetUIntVariableLengthAt(bRead.Position));
+				Assert.AreEqual((uint) target, bRead.GetUIntVariableLength());
+			}
+
+			for (int i = 0; i < 1000; i++) {
+				long target = new FastByte.Long((byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next(), (byte) r.Next()).value;
+				bWrite.PutVariableLength(target);
+				Assert.AreEqual(target, bRead.GetLongVariableLengthAt(bRead.Position));
+				Assert.AreEqual(target, bRead.GetLongVariableLength());
+				bWrite.PutVariableLength((ulong) target);
+				Assert.AreEqual((ulong) target, bRead.GetULongVariableLengthAt(bRead.Position));
+				Assert.AreEqual((ulong) target, bRead.GetULongVariableLength());
+			}
+		}
+
+		[Test]
+		public void TestVariableLength3() {
+			var b = new BitBuffer(new byte[20000]);
+			var bWrite = b;
+			var bRead = b;
+			bWrite.PutVariableLength(-5);
+			bWrite.PutVariableLength(-4);
+			bWrite.PutVariableLength(-3);
+			bWrite.PutVariableLength(-2);
+			bWrite.PutVariableLength(-1);
+
+			bWrite.PutVariableLength(0);
+
+			bWrite.PutVariableLength(1);
+			bWrite.PutVariableLength(2);
+			bWrite.PutVariableLength(3);
+			bWrite.PutVariableLength(4);
+			bWrite.PutVariableLength(5);
+
+			Assert.AreEqual(9, bRead.GetUIntVariableLength());
+			Assert.AreEqual(7, bRead.GetUIntVariableLength());
+			Assert.AreEqual(5, bRead.GetUIntVariableLength());
+			Assert.AreEqual(3, bRead.GetUIntVariableLength());
+			Assert.AreEqual(1, bRead.GetUIntVariableLength());
+
+			Assert.AreEqual(0, bRead.GetUIntVariableLength());
+
+			Assert.AreEqual(2, bRead.GetUIntVariableLength());
+			Assert.AreEqual(4, bRead.GetUIntVariableLength());
+			Assert.AreEqual(6, bRead.GetUIntVariableLength());
+			Assert.AreEqual(8, bRead.GetUIntVariableLength());
+			Assert.AreEqual(10, bRead.GetUIntVariableLength());
+		}
+
+		[Test]
+		public void TestVariableLength4() {
+			var b = new BitBuffer(new byte[20000]);
+			var bWrite = b;
+			var bRead = b;
+			bWrite.PutVariableLength(-5L);
+			bWrite.PutVariableLength(-4L);
+			bWrite.PutVariableLength(-3L);
+			bWrite.PutVariableLength(-2L);
+			bWrite.PutVariableLength(-1L);
+
+			bWrite.PutVariableLength(0L);
+
+			bWrite.PutVariableLength(1L);
+			bWrite.PutVariableLength(2L);
+			bWrite.PutVariableLength(3L);
+			bWrite.PutVariableLength(4L);
+			bWrite.PutVariableLength(5L);
+
+			Assert.AreEqual(9, bRead.GetULongVariableLength());
+			Assert.AreEqual(7, bRead.GetULongVariableLength());
+			Assert.AreEqual(5, bRead.GetULongVariableLength());
+			Assert.AreEqual(3, bRead.GetULongVariableLength());
+			Assert.AreEqual(1, bRead.GetULongVariableLength());
+
+			Assert.AreEqual(0, bRead.GetULongVariableLength());
+
+			Assert.AreEqual(2, bRead.GetULongVariableLength());
+			Assert.AreEqual(4, bRead.GetULongVariableLength());
+			Assert.AreEqual(6, bRead.GetULongVariableLength());
+			Assert.AreEqual(8, bRead.GetULongVariableLength());
+			Assert.AreEqual(10, bRead.GetULongVariableLength());
 		}
 	}
 }

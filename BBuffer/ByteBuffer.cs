@@ -28,7 +28,7 @@ namespace BBuffer {
 		/// Position of the 0-index for this section inside <see cref="data"/>
 		/// </summary>
 		public int absOffset;
-		
+
 		/// <summary>
 		/// usable bytes in <see cref="data"/> from 0
 		/// </summary>
@@ -77,7 +77,7 @@ namespace BBuffer {
 			b.absLength = absPosition;
 			return b;
 		}
-		
+
 		public ByteBuffer FromHereToEnd() {
 			ByteBuffer b = new ByteBuffer(data);
 			b.absOffset = b.absPosition = absPosition;
@@ -287,7 +287,7 @@ namespace BBuffer {
 			Put(data, 0, data.Length);
 		}
 		public void Put(ByteBuffer data) {
-			if (!data.HasData() || 0 == data.Length) return; 
+			if (!data.HasData() || 0 == data.Length) return;
 			Put(data, 0, data.Length);
 		}
 		#endregion

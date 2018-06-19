@@ -245,13 +245,11 @@ namespace BBuffer {
 
 
 		public void PutVariableLength(int value) {
-			// Right shift 1, moving the MSB to the LSB, so negative numbers can be compressed too
-			uint zigzag = (uint) (value << 1) ^ (uint) (value >> (sizeof(int) * 8 - 1));
+			uint zigzag = ((uint) value << 1) ^ (uint) (value >> (sizeof(int) * 8 - 1));
 			PutVariableLength(zigzag);
 		}
 		public int PutVariableLengthAt(int offset, int value) {
-			// Right shift 1, moving the MSB to the LSB, so negative numbers can be compressed too
-			uint zigzag = (uint) (value << 1) ^ (uint) (value >> (sizeof(int) * 8 - 1));
+			uint zigzag = ((uint) value << 1) ^ (uint) (value >> (sizeof(int) * 8 - 1));
 			return PutVariableLengthAt(offset, zigzag);
 		}
 
@@ -264,13 +262,11 @@ namespace BBuffer {
 		}
 
 		public void PutVariableLength(long value) {
-			// Right shift 1, moving the MSB to the LSB, so negative numbers can be compressed too
-			ulong zigzag = (ulong) (value << 1) ^ (ulong) (value >> (sizeof(long) * 8 - 1));
+			ulong zigzag = ((ulong) value << 1) ^ (ulong) (value >> (sizeof(long) * 8 - 1));
 			PutVariableLength(zigzag);
 		}
 		public int PutVariableLengthAt(int offset, long value) {
-			// Right shift 1, moving the MSB to the LSB, so negative numbers can be compressed too
-			ulong zigzag = (ulong) (value << 1) ^ (ulong) (value >> (sizeof(long) * 8 - 1));
+			ulong zigzag = ((ulong) value << 1) ^ (ulong) (value >> (sizeof(long) * 8 - 1));
 			return PutVariableLengthAt(offset, zigzag);
 		}
 
@@ -326,7 +322,7 @@ namespace BBuffer {
 		public void PutDeltaCompressAt(int offset, long value, long previousValue) {
 			PutVariableLengthAt(offset, value - previousValue);
 		}
-		
+
 
 		public void PutRanged(float value, float min, float max, int numberOfBits) {
 			PutRangedAt(Position, value, min, max, numberOfBits);
@@ -391,7 +387,7 @@ namespace BBuffer {
 			}
 			return bits;
 		}
-		
+
 
 		public void Put(byte[] src, int srcOffset, int lengthBytes) {
 			if (0 == (0x7 & absPosition)) {
@@ -588,7 +584,9 @@ namespace BBuffer {
 		}
 		public long GetLongVariableLength(out int bytes) {
 			ulong zigzag = GetULongVariableLength(out bytes);
-			return (long) ((zigzag >> 1) ^ (zigzag << (sizeof(long) * 8 - 1)));
+			const int bitSign = sizeof(long) * 8 - 1;
+			long xor = ((long) (zigzag << bitSign)) >> bitSign;
+			return ((long) (zigzag >> 1)) ^ xor;
 		}
 		public long GetLongVariableLengthAt(int offset) {
 			int bytes;
@@ -596,7 +594,9 @@ namespace BBuffer {
 		}
 		public long GetLongVariableLengthAt(int offset, out int bytes) {
 			ulong zigzag = GetULongVariableLengthAt(offset, out bytes);
-			return (long) ((zigzag >> 1) ^ (zigzag << (sizeof(long) * 8 - 1)));
+			const int bitSign = sizeof(long) * 8 - 1;
+			long xor = ((long) (zigzag << bitSign)) >> bitSign;
+			return ((long) (zigzag >> 1)) ^ xor;
 		}
 
 		public ulong GetULongVariableLength() {
