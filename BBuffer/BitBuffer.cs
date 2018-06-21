@@ -138,18 +138,12 @@ namespace BBuffer {
 		}
 
 		#region PutMethods
-		void UpdateDataSize(int position) {
-			if (position > Length) Length = position;
-		}
-
 		public void Put(byte value, int bitCount = sizeof(byte) * 8) {
 			FastBit.Byte.Write(value, data, absPosition, bitCount);
 			absPosition += bitCount;
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, byte value, int bitCount = sizeof(byte) * 8) {
 			FastBit.Byte.Write(value, data, absOffset + offset, bitCount);
-			UpdateDataSize(offset + absOffset + bitCount);
 		}
 
 		public void Put(bool value) {
@@ -162,61 +156,49 @@ namespace BBuffer {
 		public void Put(short value, int bitCount = sizeof(short) * 8) {
 			new FastBit.UShort((ushort) value).Write(data, absPosition, bitCount);
 			absPosition += bitCount;
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, short value, int bitCount = sizeof(short) * 8) {
 			new FastBit.UShort((ushort) value).Write(data, absOffset + offset, bitCount);
-			UpdateDataSize(offset + absOffset + bitCount);
 		}
 
 		public void Put(ushort value, int bitCount = sizeof(ushort) * 8) {
 			new FastBit.UShort(value).Write(data, absPosition, bitCount);
 			absPosition += bitCount;
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, ushort value, int bitCount = sizeof(ushort) * 8) {
 			new FastBit.UShort(value).Write(data, absOffset + offset, bitCount);
-			UpdateDataSize(offset + absOffset + bitCount);
 		}
 
 		public void Put(int value, int bitCount = sizeof(int) * 8) {
 			new FastBit.UInt((uint) value).Write(data, absPosition, bitCount);
 			absPosition += bitCount;
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, int value, int bitCount = sizeof(int) * 8) {
 			new FastBit.UInt((uint) value).Write(data, absOffset + offset, bitCount);
-			UpdateDataSize(offset + absOffset + bitCount);
 		}
 
 		public void Put(uint value, int bitCount = sizeof(uint) * 8) {
 			new FastBit.UInt(value).Write(data, absPosition, bitCount);
 			absPosition += bitCount;
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, uint value, int bitCount = sizeof(uint) * 8) {
 			new FastBit.UInt(value).Write(data, absOffset + offset, bitCount);
-			UpdateDataSize(offset + absOffset + bitCount);
 		}
 
 		public void Put(long value, int bitCount = sizeof(long) * 8) {
 			new FastBit.ULong((ulong) value).Write(data, absPosition, bitCount);
 			absPosition += bitCount;
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, long value, int bitCount = sizeof(long) * 8) {
 			new FastBit.ULong((ulong) value).Write(data, absOffset + offset, bitCount);
-			UpdateDataSize(offset + absOffset + bitCount);
 		}
 
 		public void Put(ulong value, int bitCount = sizeof(ulong) * 8) {
 			new FastBit.ULong(value).Write(data, absPosition, bitCount);
 			absPosition += bitCount;
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, ulong value, int bitCount = sizeof(ulong) * 8) {
 			new FastBit.ULong(value).Write(data, absOffset + offset, bitCount);
-			UpdateDataSize(offset + absOffset + bitCount);
 		}
 
 		public void Put(float value) {
@@ -228,7 +210,6 @@ namespace BBuffer {
 			if (!BitConverter.IsLittleEndian) value = new FastByte.Float(value).GetReversed();
 			var f = new FastByte.Float(value);
 			new FastBit.UInt(f.b0, f.b1, f.b2, f.b3).Write(data, absOffset + offset, bitCount);
-			UpdateDataSize(offset + absOffset + bitCount);
 		}
 
 		public void Put(double value) {
@@ -240,7 +221,6 @@ namespace BBuffer {
 			if (!BitConverter.IsLittleEndian) value = new FastByte.Double(value).GetReversed();
 			var f = new FastByte.Double(value);
 			new FastBit.ULong(f.b0, f.b1, f.b2, f.b3, f.b4, f.b5, f.b6, f.b7).Write(data, absOffset + offset, bitCount);
-			UpdateDataSize(offset + absOffset + bitCount);
 		}
 
 
@@ -255,7 +235,6 @@ namespace BBuffer {
 
 		public void PutVariableLength(uint value) {
 			absPosition += PutVariableLengthAt(Position, value) * 8;
-			UpdateDataSize(absPosition);
 		}
 		public int PutVariableLengthAt(int offset, uint value) {
 			return PutVariableLengthAt(offset, (ulong) value);
@@ -272,7 +251,6 @@ namespace BBuffer {
 
 		public void PutVariableLength(ulong value) {
 			absPosition += PutVariableLengthAt(Position, value) * 8;
-			UpdateDataSize(absPosition);
 		}
 		public int PutVariableLengthAt(int offset, ulong value) {
 			int bytes = 0;
@@ -395,7 +373,6 @@ namespace BBuffer {
 			if (0 == (0x7 & absPosition)) {
 				Buffer.BlockCopy(src, srcOffset, data, absPosition / 8, lengthBytes);
 				absPosition += lengthBytes * 8;
-				UpdateDataSize(absPosition);
 			}
 			else {
 				for (int i = 0; i < lengthBytes; i++) {
@@ -429,7 +406,6 @@ namespace BBuffer {
 		public void Put(BitBuffer bb) {
 			PutAt(absPosition, bb);
 			absPosition += bb.Length;
-			UpdateDataSize(absPosition);
 		}
 		#endregion
 
@@ -569,7 +545,6 @@ namespace BBuffer {
 		public uint GetUIntVariableLength(out int bytes) {
 			uint value = GetUIntVariableLengthAt(Position, out bytes);
 			absPosition += bytes * 8;
-			UpdateDataSize(absPosition);
 			return value;
 		}
 		public uint GetUIntVariableLengthAt(int offset) {
@@ -608,7 +583,6 @@ namespace BBuffer {
 		public ulong GetULongVariableLength(out int bytes) {
 			ulong value = GetULongVariableLengthAt(Position, out bytes);
 			absPosition += bytes * 8;
-			UpdateDataSize(absPosition);
 			return value;
 		}
 		public ulong GetULongVariableLengthAt(int offset) {
