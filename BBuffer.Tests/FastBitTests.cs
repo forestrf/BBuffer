@@ -174,7 +174,7 @@ namespace BBufferTests {
 		[Test]
 		public void TestGetBytes() {
 			for (int i = 0; i < 20; i++) {
-				BitBuffer b = new BitBuffer(new byte[256], i, 700);
+				BitBuffer b = new BitBuffer(new byte[256], i);
 				Random r = new Random(0);
 				for (int j = 0; j < 15; j++) {
 					int expected = r.Next();

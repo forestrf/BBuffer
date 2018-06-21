@@ -62,57 +62,55 @@ namespace BBufferTests {
 			byte[] tmp = new byte[2000];
 
 			for (int off = 0; off < 30; off++) {
-				for (int len = 300; len < 330; len++) {
-					BitBuffer b = new BitBuffer(tmp, off, len);
+				BitBuffer b = new BitBuffer(tmp, off);
 
-					b.PutVariableLength(0);
-					b.PutVariableLength(1);
-					b.PutVariableLength(-1);
-					b.PutVariableLength((uint) 0x7f);
-					b.PutVariableLength((uint) 0x80);
-					b.PutVariableLength((uint) 0x81);
-					b.PutVariableLength((uint) 0xff);
-					b.PutVariableLength(0x7f);
-					b.PutVariableLength(0x80);
-					b.PutVariableLength(0xff);
-					b.PutVariableLength((uint) 0x7f);
-					b.PutVariableLength((uint) 0x7fff);
-					b.PutVariableLength((uint) 0xffff);
-					b.PutVariableLength((uint) 0xffffff);
-					b.PutVariableLength((uint) 0xffffffff);
-					b.PutVariableLength((ulong) 0xffffffffff);
-					b.PutVariableLength((ulong) 0xffffffffffff);
-					b.PutVariableLength((ulong) 0xffffffffffffff);
-					b.PutVariableLength((ulong) 0xffffffffffffffff);
-					b.PutVariableLength(0xffffffffff);
-					b.PutVariableLength(0xffffffffffff);
-
-
-					b.Position = 0;
+				b.PutVariableLength(0);
+				b.PutVariableLength(1);
+				b.PutVariableLength(-1);
+				b.PutVariableLength((uint) 0x7f);
+				b.PutVariableLength((uint) 0x80);
+				b.PutVariableLength((uint) 0x81);
+				b.PutVariableLength((uint) 0xff);
+				b.PutVariableLength(0x7f);
+				b.PutVariableLength(0x80);
+				b.PutVariableLength(0xff);
+				b.PutVariableLength((uint) 0x7f);
+				b.PutVariableLength((uint) 0x7fff);
+				b.PutVariableLength((uint) 0xffff);
+				b.PutVariableLength((uint) 0xffffff);
+				b.PutVariableLength((uint) 0xffffffff);
+				b.PutVariableLength((ulong) 0xffffffffff);
+				b.PutVariableLength((ulong) 0xffffffffffff);
+				b.PutVariableLength((ulong) 0xffffffffffffff);
+				b.PutVariableLength((ulong) 0xffffffffffffffff);
+				b.PutVariableLength(0xffffffffff);
+				b.PutVariableLength(0xffffffffffff);
 
 
-					Assert.AreEqual(0, b.GetIntVariableLength());
-					Assert.AreEqual(1, b.GetIntVariableLength());
-					Assert.AreEqual(-1, b.GetIntVariableLength());
-					Assert.AreEqual((uint) 0x7f, b.GetUIntVariableLength());
-					Assert.AreEqual((uint) 0x80, b.GetUIntVariableLength());
-					Assert.AreEqual((uint) 0x81, b.GetUIntVariableLength());
-					Assert.AreEqual((uint) 0xff, b.GetUIntVariableLength());
-					Assert.AreEqual(0x7f, b.GetIntVariableLength());
-					Assert.AreEqual(0x80, b.GetIntVariableLength());
-					Assert.AreEqual(0xff, b.GetIntVariableLength());
-					Assert.AreEqual((uint) 0x7f, b.GetUIntVariableLength());
-					Assert.AreEqual((uint) 0x7fff, b.GetUIntVariableLength());
-					Assert.AreEqual((uint) 0xffff, b.GetUIntVariableLength());
-					Assert.AreEqual((uint) 0xffffff, b.GetUIntVariableLength());
-					Assert.AreEqual((uint) 0xffffffff, b.GetUIntVariableLength());
-					Assert.AreEqual((ulong) 0xffffffffff, b.GetULongVariableLength());
-					Assert.AreEqual((ulong) 0xffffffffffff, b.GetULongVariableLength());
-					Assert.AreEqual((ulong) 0xffffffffffffff, b.GetULongVariableLength());
-					Assert.AreEqual((ulong) 0xffffffffffffffff, b.GetULongVariableLength());
-					Assert.AreEqual(0xffffffffff, b.GetLongVariableLength());
-					Assert.AreEqual(0xffffffffffff, b.GetLongVariableLength());
-				}
+				b.Position = 0;
+
+
+				Assert.AreEqual(0, b.GetIntVariableLength());
+				Assert.AreEqual(1, b.GetIntVariableLength());
+				Assert.AreEqual(-1, b.GetIntVariableLength());
+				Assert.AreEqual((uint) 0x7f, b.GetUIntVariableLength());
+				Assert.AreEqual((uint) 0x80, b.GetUIntVariableLength());
+				Assert.AreEqual((uint) 0x81, b.GetUIntVariableLength());
+				Assert.AreEqual((uint) 0xff, b.GetUIntVariableLength());
+				Assert.AreEqual(0x7f, b.GetIntVariableLength());
+				Assert.AreEqual(0x80, b.GetIntVariableLength());
+				Assert.AreEqual(0xff, b.GetIntVariableLength());
+				Assert.AreEqual((uint) 0x7f, b.GetUIntVariableLength());
+				Assert.AreEqual((uint) 0x7fff, b.GetUIntVariableLength());
+				Assert.AreEqual((uint) 0xffff, b.GetUIntVariableLength());
+				Assert.AreEqual((uint) 0xffffff, b.GetUIntVariableLength());
+				Assert.AreEqual((uint) 0xffffffff, b.GetUIntVariableLength());
+				Assert.AreEqual((ulong) 0xffffffffff, b.GetULongVariableLength());
+				Assert.AreEqual((ulong) 0xffffffffffff, b.GetULongVariableLength());
+				Assert.AreEqual((ulong) 0xffffffffffffff, b.GetULongVariableLength());
+				Assert.AreEqual((ulong) 0xffffffffffffffff, b.GetULongVariableLength());
+				Assert.AreEqual(0xffffffffff, b.GetLongVariableLength());
+				Assert.AreEqual(0xffffffffffff, b.GetLongVariableLength());
 			}
 		}
 
@@ -281,6 +279,35 @@ namespace BBufferTests {
 			Assert.AreEqual(6, bRead.GetULongVariableLength());
 			Assert.AreEqual(8, bRead.GetULongVariableLength());
 			Assert.AreEqual(10, bRead.GetULongVariableLength());
+		}
+
+		[Test]
+		public void Ranged() {
+
+		}
+
+		[Test]
+		public void SimulateWrites() {
+			var b = new BitBuffer(new byte[10000]);
+			b.simulateWrites = true;
+			b.Put(new BitBuffer(new byte[] { 0xff, 0xff, 0xff }, 0, 3));
+			b.Put(true);
+			b.Put(new byte[] { 0xff, 0xff, 0xff });
+			b.Put(1d);
+			b.Put(1f);
+			b.Put((byte) 1);
+			b.Put(1);
+			b.Put(1L);
+			b.Put((short) 1);
+			b.Put(1u);
+			b.Put(1uL);
+			b.Put((ushort) 1);
+			b.Put(new byte[] { 0xff, 0xff, 0xff }, 0, 3);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32 + 64 + 16 + 32 + 64 + 16 + 24, b.Position);
+
+			for (int i = 0; i < b.Position; i++) {
+				Assert.AreEqual(false, b.GetBoolAt(i));
+			}
 		}
 	}
 }

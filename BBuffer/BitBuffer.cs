@@ -27,6 +27,11 @@ namespace BBuffer {
 		/// </summary>
 		public int absLength;
 
+		/// <summary>
+		/// If true, writting will only advance <see cref="Position"/>/<see cref="absPosition"/>
+		/// </summary>
+		public bool simulateWrites;
+
 
 
 		public BitBuffer(byte[] buffer) : this(buffer, 0, null != buffer ? buffer.Length * 8 : 0) { }
@@ -139,73 +144,118 @@ namespace BBuffer {
 
 		#region PutMethods
 		public void Put(byte value, int bitCount = sizeof(byte) * 8) {
+			if (simulateWrites) {
+				absPosition += bitCount;
+				return;
+			}
 			FastBit.Byte.Write(value, data, absPosition, bitCount);
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, byte value, int bitCount = sizeof(byte) * 8) {
+			if (simulateWrites) return;
 			FastBit.Byte.Write(value, data, absOffset + offset, bitCount);
 		}
 
 		public void Put(bool value) {
+			if (simulateWrites) {
+				absPosition += 1;
+				return;
+			}
 			Put(value ? (byte) 1 : (byte) 0, 1);
 		}
 		public void PutAt(int offset, bool value) {
+			if (simulateWrites) return;
 			PutAt(offset, value ? (byte) 1 : (byte) 0, 1);
 		}
 
 		public void Put(short value, int bitCount = sizeof(short) * 8) {
+			if (simulateWrites) {
+				absPosition += bitCount;
+				return;
+			}
 			new FastBit.UShort((ushort) value).Write(data, absPosition, bitCount);
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, short value, int bitCount = sizeof(short) * 8) {
+			if (simulateWrites) return;
 			new FastBit.UShort((ushort) value).Write(data, absOffset + offset, bitCount);
 		}
 
 		public void Put(ushort value, int bitCount = sizeof(ushort) * 8) {
+			if (simulateWrites) {
+				absPosition += bitCount;
+				return;
+			}
 			new FastBit.UShort(value).Write(data, absPosition, bitCount);
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, ushort value, int bitCount = sizeof(ushort) * 8) {
+			if (simulateWrites) return;
 			new FastBit.UShort(value).Write(data, absOffset + offset, bitCount);
 		}
 
 		public void Put(int value, int bitCount = sizeof(int) * 8) {
+			if (simulateWrites) {
+				absPosition += bitCount;
+				return;
+			}
 			new FastBit.UInt((uint) value).Write(data, absPosition, bitCount);
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, int value, int bitCount = sizeof(int) * 8) {
+			if (simulateWrites) return;
 			new FastBit.UInt((uint) value).Write(data, absOffset + offset, bitCount);
 		}
 
 		public void Put(uint value, int bitCount = sizeof(uint) * 8) {
+			if (simulateWrites) {
+				absPosition += bitCount;
+				return;
+			}
 			new FastBit.UInt(value).Write(data, absPosition, bitCount);
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, uint value, int bitCount = sizeof(uint) * 8) {
+			if (simulateWrites) return;
 			new FastBit.UInt(value).Write(data, absOffset + offset, bitCount);
 		}
 
 		public void Put(long value, int bitCount = sizeof(long) * 8) {
+			if (simulateWrites) {
+				absPosition += bitCount;
+				return;
+			}
 			new FastBit.ULong((ulong) value).Write(data, absPosition, bitCount);
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, long value, int bitCount = sizeof(long) * 8) {
+			if (simulateWrites) return;
 			new FastBit.ULong((ulong) value).Write(data, absOffset + offset, bitCount);
 		}
 
 		public void Put(ulong value, int bitCount = sizeof(ulong) * 8) {
+			if (simulateWrites) {
+				absPosition += bitCount;
+				return;
+			}
 			new FastBit.ULong(value).Write(data, absPosition, bitCount);
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, ulong value, int bitCount = sizeof(ulong) * 8) {
+			if (simulateWrites) return;
 			new FastBit.ULong(value).Write(data, absOffset + offset, bitCount);
 		}
 
 		public void Put(float value) {
+			if (simulateWrites) {
+				absPosition += sizeof(float) * 8;
+				return;
+			}
 			PutAt(Position, value);
 			absPosition += sizeof(float) * 8;
 		}
 		public void PutAt(int offset, float value) {
+			if (simulateWrites) return;
 			const int bitCount = sizeof(float) * 8;
 			if (!BitConverter.IsLittleEndian) value = new FastByte.Float(value).GetReversed();
 			var f = new FastByte.Float(value);
@@ -213,10 +263,15 @@ namespace BBuffer {
 		}
 
 		public void Put(double value) {
+			if (simulateWrites) {
+				absPosition += sizeof(double) * 8;
+				return;
+			}
 			PutAt(Position, value);
 			absPosition += sizeof(double) * 8;
 		}
 		public void PutAt(int offset, double value) {
+			if (simulateWrites) return;
 			const int bitCount = sizeof(double) * 8;
 			if (!BitConverter.IsLittleEndian) value = new FastByte.Double(value).GetReversed();
 			var f = new FastByte.Double(value);
@@ -307,6 +362,7 @@ namespace BBuffer {
 			absPosition += numberOfBits;
 		}
 		public void PutRangedAt(int offset, float value, float min, float max, int numberOfBits) {
+			if (simulateWrites) return;
 			if (0 == numberOfBits) return;
 			double unit = (value - min) / (max - min);
 			uint maxVal = uint.MaxValue >> (32 - numberOfBits);
@@ -370,6 +426,10 @@ namespace BBuffer {
 
 
 		public void Put(byte[] src, int srcOffset, int lengthBytes) {
+			if (simulateWrites) {
+				absPosition += lengthBytes * 8;
+				return;
+			}
 			if (0 == (0x7 & absPosition)) {
 				Buffer.BlockCopy(src, srcOffset, data, absPosition / 8, lengthBytes);
 				absPosition += lengthBytes * 8;
@@ -404,6 +464,10 @@ namespace BBuffer {
 			}
 		}
 		public void Put(BitBuffer bb) {
+			if (simulateWrites) {
+				absPosition += bb.Length;
+				return;
+			}
 			PutAt(absPosition, bb);
 			absPosition += bb.Length;
 		}
