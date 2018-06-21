@@ -338,6 +338,7 @@ namespace BBuffer {
 		public void PutRanged(int value, int min, int max) {
 			int numberOfBits;
 			PutRangedAt(absPosition, value, min, max, out numberOfBits);
+			absPosition += numberOfBits;
 		}
 		public void PutRanged(int value, int min, int max, out int numberOfBits) {
 			PutRangedAt(absPosition, value, min, max, out numberOfBits);
@@ -356,6 +357,7 @@ namespace BBuffer {
 		public void PutRanged(long value, long min, long max) {
 			int numberOfBits;
 			PutRanged(value, min, max, out numberOfBits);
+			absPosition += numberOfBits;
 		}
 		public void PutRanged(long value, long min, long max, out int numberOfBits) {
 			PutRangedAt(absPosition, value, min, max, out numberOfBits);
