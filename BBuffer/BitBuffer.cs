@@ -444,7 +444,7 @@ namespace BBuffer {
 			}
 			else {
 				for (int i = 0; i < src.Length / 8; i++) {
-					PutAt(offset + i * 8, src.GetByte());
+					PutAt(offset + i * 8, src.GetByteAt(i * 8));
 				}
 			}
 			int writtenLength = ~0x7 & src.Length;

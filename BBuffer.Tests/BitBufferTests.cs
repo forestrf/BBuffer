@@ -130,6 +130,24 @@ namespace BBufferTests {
 		}
 
 		[Test]
+		public void TestBitBufferPut2() {
+			BitBuffer b = new BitBuffer(new byte[1200]);
+			b.Position = 132;
+			
+			BitBuffer bToPut = new BitBuffer(new byte[1200]);
+			bToPut.Put((byte) 0);
+			bToPut.Put((byte) 1);
+			bToPut.Put((byte) 0);
+			bToPut.Length = bToPut.absPosition;
+
+			CollectionAssert.AreEqual(new byte[3] { 0, 1, 0 }, bToPut.ToArray());
+
+			b.PutAt(132, bToPut);
+
+			CollectionAssert.AreEqual(new byte[3] { 0, 1, 0 }, b.GetBitsAt(132, 24).ToArray());
+		}
+
+		[Test]
 		public void BitsOccuplied() {
 			Assert.AreEqual(0, BitBuffer.BitsOccupied(0));
 			for (int i = 0; i < 32; i++) {
@@ -373,6 +391,25 @@ namespace BBufferTests {
 				b.Put(data);
 				var newArr = b.GetCropToCurrentPosition().ToArray();
 				CollectionAssert.AreEqual(data, newArr, "offset=" + offset);
+			}
+		}
+
+		[Test]
+		public void BufferPutBuffer() {
+			Random r = new Random();
+			for (int offset1 = 0; offset1 < 16; offset1++) {
+				byte[] data = new byte[40];
+				r.NextBytes(data);
+				for (int offset2 = 0; offset2 < 16; offset2++) {
+					var dBitBuffer = new BitBuffer(data, offset2, 4 * 8);
+					var b = new BitBuffer(new byte[60], offset1);
+					b.Put(dBitBuffer);
+					var oldArray = dBitBuffer.ToArray();
+					b = b.GetCropToCurrentPosition();
+					var newArr = b.ToArray();
+					CollectionAssert.AreEqual(oldArray, newArr, "offset1=" + offset1 + ", offset2 = " + offset2);
+					Assert.IsTrue(dBitBuffer.BufferEquals(b), "offset1=" + offset1 + ", offset2 = " + offset2);
+				}
 			}
 		}
 	}
