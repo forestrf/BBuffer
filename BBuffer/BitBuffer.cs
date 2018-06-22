@@ -320,18 +320,18 @@ namespace BBuffer {
 			return bytes;
 		}
 
-		public int BitsNeededForVariableLength(int value) {
+		public static int BitsNeededForVariableLength(int value) {
 			uint zigzag = (uint) (value << 1) ^ (uint) (value >> (sizeof(int) * 8 - 1));
 			return BitsNeededForVariableLength(zigzag);
 		}
-		public int BitsNeededForVariableLength(long value) {
+		public static int BitsNeededForVariableLength(long value) {
 			ulong zigzag = (ulong) (value << 1) ^ (ulong) (value >> (sizeof(long) * 8 - 1));
 			return BitsNeededForVariableLength(zigzag);
 		}
-		public int BitsNeededForVariableLength(uint value) {
+		public static int BitsNeededForVariableLength(uint value) {
 			return BitsNeededForVariableLength((ulong) value);
 		}
-		public int BitsNeededForVariableLength(ulong value) {
+		public static int BitsNeededForVariableLength(ulong value) {
 			int bytes = 0;
 			while (value >= 0x80) {
 				bytes++;
