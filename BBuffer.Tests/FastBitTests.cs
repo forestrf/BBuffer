@@ -189,8 +189,8 @@ namespace BBufferTests {
 
 					r = new Random(0);
 					for (int j = 0; j < 15; j++) {
-						int expected = r.Next();
-						int read = b2.GetInt();
+						uint expected = ((uint) r.Next()) << k;
+						uint read = b2.GetUInt(32) & (~0u << k);
 						Assert.AreEqual(expected, read, "offset source=" + i + ", ofset destination=" + k + ", number=" + j);
 					}
 				}
@@ -213,7 +213,7 @@ namespace BBufferTests {
 		}
 
 		[Test]
-		public void TestBitInLastByte() {
+		public void TestBitsInLastByte() {
 			var b = new BitBuffer(new byte[1], 7);
 			b.GetBool();
 			for (int i = 0; i < 8; i++) {

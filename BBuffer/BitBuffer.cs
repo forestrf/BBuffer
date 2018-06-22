@@ -114,15 +114,18 @@ namespace BBuffer {
 		/// </summary>
 		public byte[] ToArray() {
 			byte[] copy = new byte[(int) Math.Ceiling(Length / 8f)];
-			GetBits(copy, 0, copy.Length);
+			GetBits(copy, 0, Length);
 			return copy;
 		}
 
 		public bool BufferEquals(BitBuffer other) {
-			if (Length != other.Length) return false;
-			for (int i = 0; i < Length; i += 8)
-				if (GetByteAt(i) != other.GetByteAt(i))
+			if (Length != other.Length)
+				return false;
+			for (int i = 0; i < Length / 8; i++)
+				if (GetByteAt(i * 8) != other.GetByteAt(i * 8))
 					return false;
+			if (GetByteAt(~0x7 & Length, 0x7 & Length) != other.GetByteAt(~0x7 & Length, 0x7 & Length))
+				return false;
 			return true;
 		}
 
@@ -371,11 +374,11 @@ namespace BBuffer {
 
 		public void PutRanged(int value, int min, int max) {
 			int numberOfBits;
-			PutRangedAt(absPosition, value, min, max, out numberOfBits);
+			PutRangedAt(Position, value, min, max, out numberOfBits);
 			absPosition += numberOfBits;
 		}
 		public void PutRanged(int value, int min, int max, out int numberOfBits) {
-			PutRangedAt(absPosition, value, min, max, out numberOfBits);
+			PutRangedAt(Position, value, min, max, out numberOfBits);
 			absPosition += numberOfBits;
 		}
 		public void PutRangedAt(int offset, int value, int min, int max) {
@@ -394,7 +397,7 @@ namespace BBuffer {
 			absPosition += numberOfBits;
 		}
 		public void PutRanged(long value, long min, long max, out int numberOfBits) {
-			PutRangedAt(absPosition, value, min, max, out numberOfBits);
+			PutRangedAt(Position, value, min, max, out numberOfBits);
 			absPosition += numberOfBits;
 		}
 		public void PutRangedAt(int offset, long value, long min, long max) {
@@ -444,7 +447,7 @@ namespace BBuffer {
 			Put(v, 0, v.Length);
 		}
 		public void PutAt(int offset, BitBuffer src) {
-			int localAbsPosition = absPosition;
+			int localPosition = Position;
 			bool srcArrIsByteAligned = 0 == (0x7 & src.absOffset);
 			bool dstArrIsByteAligned = 0 == (0x7 & (absOffset + offset));
 			if (srcArrIsByteAligned && dstArrIsByteAligned) {
@@ -455,12 +458,12 @@ namespace BBuffer {
 					PutAt(offset + i * 8, src.GetByte());
 				}
 			}
-			int writtenLength = (src.Length / 8) * 8;
-			localAbsPosition += writtenLength;
+			int writtenLength = ~0x7 & src.Length;
+			localPosition += writtenLength;
 			int lastByteLength = 0x7 & src.Length;
 			if (0 != lastByteLength) {
 				byte lastByte = src.GetByteAt(writtenLength, lastByteLength);
-				PutAt(localAbsPosition, lastByte, lastByteLength);
+				PutAt(localPosition, lastByte, lastByteLength);
 			}
 		}
 		public void Put(BitBuffer bb) {
@@ -468,7 +471,7 @@ namespace BBuffer {
 				absPosition += bb.Length;
 				return;
 			}
-			PutAt(absPosition, bb);
+			PutAt(Position, bb);
 			absPosition += bb.Length;
 		}
 		#endregion
@@ -575,7 +578,7 @@ namespace BBuffer {
 		/// <param name="lenght">in bits</param>
 		public void GetBits(byte[] destination, int dstOffset, int lenght) {
 			var toPut = new BitBuffer(data, absOffset, Math.Min(lenght, Length));
-			new BitBuffer(destination, 0).Put(toPut);
+			new BitBuffer(destination, dstOffset).Put(toPut);
 		}
 
 		/// <param name="length">in bits</param>
@@ -583,6 +586,10 @@ namespace BBuffer {
 			BitBuffer b = new BitBuffer(data, absPosition, length);
 			absPosition += length;
 			return b;
+		}
+
+		public BitBuffer GetBitsAt(int offset, int length) {
+			return new BitBuffer(data, absOffset + offset, length);
 		}
 
 		public int GetIntVariableLength() {

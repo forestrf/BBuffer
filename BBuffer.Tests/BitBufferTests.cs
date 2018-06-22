@@ -309,5 +309,59 @@ namespace BBufferTests {
 				Assert.AreEqual(false, b.GetBoolAt(i));
 			}
 		}
+
+		[Test]
+		public void TestPutGetBitBuffer() {
+			var b = new BitBuffer(new byte[1024]);
+			var r = new Random(0);
+			for (int i = 0; i < b.data.Length / 4; i++) {
+				b.Put(r.Next());
+			}
+
+			for (int i = 0; i < 16; i++) {
+				for (int length = 0; length < 32; length++) {
+					for (int offset = 0; offset < 16; offset++) {
+						var c = new BitBuffer(new byte[(int) Math.Ceiling((offset + length) / 8f)], offset);
+						c.Put(b.GetBitsAt(i, length));
+						c = c.GetCropToCurrentPosition();
+						CollectionAssert.AreEqual(b.GetBitsAt(i, length).ToArray(), c.ToArray(), "i=" + i + ", length=" + length + ", offset=" + offset);
+						Assert.IsTrue(b.GetBitsAt(i, length).BufferEquals(c), "i=" + i + ", length=" + length + ", offset=" + offset);
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void TestBufferInequality() {
+			var b = new BitBuffer(new byte[1024]);
+			var r = new Random(0);
+			for (int i = 0; i < b.data.Length / 4; i++) {
+				b.Put(r.Next());
+			}
+
+			
+			for (int offset = 0; offset < 16; offset++) {
+				for (int i = 0; i < 16; i++) {
+					for (int length = 0; length < 16; length++) {
+						var c = new BitBuffer(new byte[(int) Math.Ceiling((offset + length) / 8f)], offset);
+						for (int p = 0; p < length; p++) {
+							var b2 = c;
+							try {
+								var tmp = b.GetBitsAt(i, length);
+								b2.Put(tmp);
+								b2 = b2.GetCropToCurrentPosition();
+								b2.PutAt(p, !b2.GetBoolAt(p));
+
+								CollectionAssert.AreNotEqual(b.GetBitsAt(i, length).ToArray(), b2.ToArray());
+								Assert.IsFalse(b.GetBitsAt(i, length).BufferEquals(b2));
+							}
+							catch (Exception e) {
+								throw new Exception("i=" + i + ", length=" + length + ", p=" + p + ", offset=" + offset, e);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 }
