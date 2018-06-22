@@ -109,9 +109,6 @@ namespace BBuffer {
 			absPosition -= bits;
 		}
 
-		/// <summary>
-		/// Needs testing
-		/// </summary>
 		public byte[] ToArray() {
 			byte[] copy = new byte[(int) Math.Ceiling(Length / 8f)];
 			GetBits(copy, 0, Length);
@@ -428,23 +425,15 @@ namespace BBuffer {
 		}
 
 
-		public void Put(byte[] src, int srcOffset, int lengthBytes) {
+		public void Put(byte[] v) {
+			Put(v, 0, v.Length * 8);
+		}
+		public void Put(byte[] src, int srcOffset, int length) {
 			if (simulateWrites) {
-				absPosition += lengthBytes * 8;
+				absPosition += length;
 				return;
 			}
-			if (0 == (0x7 & absPosition)) {
-				Buffer.BlockCopy(src, srcOffset, data, absPosition / 8, lengthBytes);
-				absPosition += lengthBytes * 8;
-			}
-			else {
-				for (int i = 0; i < lengthBytes; i++) {
-					Put(src[srcOffset + i]);
-				}
-			}
-		}
-		public void Put(byte[] v) {
-			Put(v, 0, v.Length);
+			Put(new BitBuffer(src, srcOffset, length));
 		}
 		public void PutAt(int offset, BitBuffer src) {
 			int localPosition = Position;

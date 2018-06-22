@@ -302,7 +302,7 @@ namespace BBufferTests {
 			b.Put(1u);
 			b.Put(1uL);
 			b.Put((ushort) 1);
-			b.Put(new byte[] { 0xff, 0xff, 0xff }, 0, 3);
+			b.Put(new byte[] { 0xff, 0xff, 0xff }, 0, 3 * 8);
 			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32 + 64 + 16 + 32 + 64 + 16 + 24, b.Position);
 
 			for (int i = 0; i < b.Position; i++) {
@@ -339,7 +339,6 @@ namespace BBufferTests {
 				b.Put(r.Next());
 			}
 
-			
 			for (int offset = 0; offset < 16; offset++) {
 				for (int i = 0; i < 16; i++) {
 					for (int length = 0; length < 16; length++) {
@@ -361,6 +360,19 @@ namespace BBufferTests {
 						}
 					}
 				}
+			}
+		}
+
+		[Test]
+		public void ToArrayTest() {
+			Random r = new Random();
+			for (int offset = 0; offset < 16; offset++) {
+				byte[] data = new byte[40];
+				r.NextBytes(data);
+				var b = new BitBuffer(new byte[60], offset);
+				b.Put(data);
+				var newArr = b.GetCropToCurrentPosition().ToArray();
+				CollectionAssert.AreEqual(data, newArr, "offset=" + offset);
 			}
 		}
 	}
