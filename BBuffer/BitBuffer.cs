@@ -383,7 +383,7 @@ namespace BBuffer {
 			PutRangedAt(offset, value, min, max, out numberOfBits);
 		}
 		public void PutRangedAt(int offset, int value, int min, int max, out int numberOfBits) {
-			numberOfBits = BitsOccupied((uint) (max - min));
+			numberOfBits = BitsOccupiedByRange(min, max);
 			uint rvalue = (uint) (value - min);
 			PutAt(offset, rvalue, numberOfBits);
 		}
@@ -402,9 +402,16 @@ namespace BBuffer {
 			PutRangedAt(offset, value, min, max, out numberOfBits);
 		}
 		public void PutRangedAt(int offset, long value, long min, long max, out int numberOfBits) {
-			numberOfBits = BitsOccupied((ulong) (max - min));
+			numberOfBits = BitsOccupiedByRange(min, max);
 			ulong rangedValue = (ulong) (value - min);
 			PutAt(offset, rangedValue, numberOfBits);
+		}
+
+		public static int BitsOccupiedByRange(int min, int max) {
+			return BitsOccupied((uint) (max - min));
+		}
+		public static int BitsOccupiedByRange(long min, long max) {
+			return BitsOccupied((ulong) (max - min));
 		}
 
 		public static int BitsOccupied(uint value) {
@@ -698,23 +705,23 @@ namespace BBuffer {
 		}
 
 		public int GetRangedInt(int min, int max) {
-			int numBits = BitsOccupied((uint) (max - min));
+			int numBits = BitsOccupiedByRange(min, max);
 			int rvalue = (int) GetUInt(numBits);
 			return min + rvalue;
 		}
 		public int GetRangedIntAt(int offset, int min, int max) {
-			int numBits = BitsOccupied((uint) (max - min));
+			int numBits = BitsOccupiedByRange(min, max);
 			int rvalue = (int) GetUIntAt(offset, numBits);
 			return min + rvalue;
 		}
 
 		public long GetRangedLong(long min, long max) {
-			int numBits = BitsOccupied((ulong) (max - min));
+			int numBits = BitsOccupiedByRange(min, max);
 			long rvalue = (long) GetUInt(numBits);
 			return min + rvalue;
 		}
 		public long GetRangedLongAt(int offset, long min, long max) {
-			int numBits = BitsOccupied((ulong) (max - min));
+			int numBits = BitsOccupiedByRange(min, max);
 			long rvalue = (long) GetUIntAt(offset, numBits);
 			return min + rvalue;
 		}
