@@ -412,5 +412,51 @@ namespace BBufferTests {
 				}
 			}
 		}
+
+		[Test]
+		public void SerializingModeTest() {
+			var reference = new BitBuffer(new byte[1000]);
+			
+			reference.serializerWriteMode = true;
+			TestBothSerializingModes(reference);
+
+			reference.serializerWriteMode = false;
+			TestBothSerializingModes(reference);
+		}
+
+		private void TestBothSerializingModes(BitBuffer b) {
+			BitBuffer example = new BitBuffer(new byte[] { 1, 2, 3 });
+			if (b.serializerWriteMode) {
+				b.Serialize(ref example);
+			}
+			else {
+				var buff = new BitBuffer(new byte[3]);
+				b.Serialize(ref buff);
+				Assert.IsTrue(example.BufferEquals(buff));
+			}
+
+			for (int i = 0; i < 2; i++) {
+				bool bTest = false;
+				if (b.serializerWriteMode) {
+					bTest = i % 2 == 0;
+					b.Serialize(ref bTest);
+				}
+				else {
+					b.Serialize(ref bTest);
+					Assert.AreEqual(i % 2 == 0, bTest);
+				}
+			}
+
+			for (int i = 0; i < 10; i++) {
+				if (b.serializerWriteMode) {
+					b.Serialize(ref i);
+				}
+				else {
+					int j = 0;
+					b.Serialize(ref j);
+					Assert.AreEqual(i, j);
+				}
+			}
+		}
 	}
 }

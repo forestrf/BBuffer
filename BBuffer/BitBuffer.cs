@@ -32,6 +32,12 @@ namespace BBuffer {
 		/// </summary>
 		public bool simulateWrites;
 
+		/// <summary>
+		/// If true, serializer methods will read, otherwise they will write
+		/// Based on https://gafferongames.com/post/serialization_strategies/
+		/// </summary>
+		public bool serializerWriteMode;
+
 
 
 		public BitBuffer(byte[] buffer) : this(buffer, 0, null != buffer ? buffer.Length * 8 : 0) { }
@@ -47,7 +53,11 @@ namespace BBuffer {
 		}
 
 		public void SkipBytes(int v) {
-			absPosition += 8 * v;
+			SkipBits(8 * v);
+		}
+
+		public void SkipBits(int numberOfBits) {
+			absPosition += numberOfBits;
 		}
 
 		/// <summary>Relative to <see cref="absOffset"/>. In bits</summary>
@@ -96,10 +106,6 @@ namespace BBuffer {
 			b.absOffset = b.absPosition = absOffset;
 			b.absLength = absPosition;
 			return b;
-		}
-
-		public void SkipBits(int numberOfBits) {
-			absPosition += numberOfBits;
 		}
 
 		public void Rewind() {
@@ -342,21 +348,6 @@ namespace BBuffer {
 		}
 
 
-		public void PutDeltaCompress(int value, int previousValue) {
-			PutVariableLength(value - previousValue);
-		}
-		public void PutDeltaCompressAt(int offset, int value, int previousValue) {
-			PutVariableLengthAt(offset, value - previousValue);
-		}
-
-		public void PutDeltaCompress(long value, long previousValue) {
-			PutVariableLength(value - previousValue);
-		}
-		public void PutDeltaCompressAt(int offset, long value, long previousValue) {
-			PutVariableLengthAt(offset, value - previousValue);
-		}
-
-
 		public void PutRanged(float value, float min, float max, int numberOfBits) {
 			PutRangedAt(Position, value, min, max, numberOfBits);
 			absPosition += numberOfBits;
@@ -374,10 +365,6 @@ namespace BBuffer {
 			PutRangedAt(Position, value, min, max, out numberOfBits);
 			absPosition += numberOfBits;
 		}
-		public void PutRanged(int value, int min, int max, out int numberOfBits) {
-			PutRangedAt(Position, value, min, max, out numberOfBits);
-			absPosition += numberOfBits;
-		}
 		public void PutRangedAt(int offset, int value, int min, int max) {
 			int numberOfBits;
 			PutRangedAt(offset, value, min, max, out numberOfBits);
@@ -390,10 +377,6 @@ namespace BBuffer {
 
 		public void PutRanged(long value, long min, long max) {
 			int numberOfBits;
-			PutRanged(value, min, max, out numberOfBits);
-			absPosition += numberOfBits;
-		}
-		public void PutRanged(long value, long min, long max, out int numberOfBits) {
 			PutRangedAt(Position, value, min, max, out numberOfBits);
 			absPosition += numberOfBits;
 		}
@@ -674,23 +657,6 @@ namespace BBuffer {
 		}
 
 
-		public int GetIntDeltaCompress(int previousValue) {
-			return GetIntVariableLength() + previousValue;
-		}
-		public int GetIntDeltaCompressAt(int offset, int previousValue) {
-			int bytes;
-			return GetIntVariableLengthAt(offset, out bytes) + previousValue;
-		}
-
-		public long GetLongDeltaCompress(long previousValue) {
-			return GetLongVariableLength() + previousValue;
-		}
-		public long GetLongDeltaCompressAt(int offset, long previousValue) {
-			int bytes;
-			return GetLongVariableLengthAt(offset, out bytes) + previousValue;
-		}
-
-
 		public float GetRangedFloat(float min, float max, int numberOfBits) {
 			float value = GetRangedFloatAt(Position, min, max, numberOfBits);
 			absPosition += numberOfBits;
@@ -725,7 +691,188 @@ namespace BBuffer {
 			long rvalue = (long) GetUIntAt(offset, numBits);
 			return min + rvalue;
 		}
+		#endregion
 
+		#region SerializeMethods
+		public void Serialize(ref byte value, int bitCount = sizeof(byte) * 8) {
+			if (serializerWriteMode) Put(value, bitCount); 
+			else value = GetByte(bitCount);
+		}
+		public void SerializeAt(int offset, ref byte value, int bitCount = sizeof(byte) * 8) {
+			if (serializerWriteMode) PutAt(value, bitCount);
+			else value = GetByteAt(offset, bitCount); 
+		}
+
+		public void Serialize(ref bool value) {
+			if (serializerWriteMode) Put(value);
+			else value = GetBool(); 
+		}
+		public void SerializeAt(int offset, ref bool value) {
+			if (serializerWriteMode) PutAt(offset, value);
+			else value = GetBoolAt(offset);
+		}
+
+		public void Serialize(ref short value, int bitCount = sizeof(short) * 8) {
+			if (serializerWriteMode) Put(value, bitCount); 
+			else value = GetShort(bitCount);
+		}
+		public void SerializeAt(int offset, ref short value, int bitCount = sizeof(short) * 8) {
+			if (serializerWriteMode) PutAt(offset, value, bitCount);
+			else value = GetShortAt(offset, bitCount);
+		}
+
+		public void Serialize(ref ushort value, int bitCount = sizeof(ushort) * 8) {
+			if (serializerWriteMode) Put(value, bitCount);
+			else value = GetUShort(bitCount); 
+		}
+		public void SerializeAt(int offset, ref ushort value, int bitCount = sizeof(ushort) * 8) {
+			if (serializerWriteMode) PutAt(offset, value, bitCount); 
+			else value = GetUShortAt(offset, bitCount);
+		}
+
+		public void Serialize(ref int value, int bitCount = sizeof(int) * 8) {
+			if (serializerWriteMode) Put(value, bitCount);
+			else value = GetInt(bitCount); 
+		}
+		public void SerializeAt(int offset, ref int value, int bitCount = sizeof(int) * 8) {
+			if (serializerWriteMode) PutAt(offset, value, bitCount);
+			else value = GetIntAt(offset, bitCount);
+		}
+
+		public void Serialize(ref uint value, int bitCount = sizeof(uint) * 8) {
+			if (serializerWriteMode) Put(value, bitCount); 
+			else value = GetUInt(bitCount);
+		}
+		public void SerializeAt(int offset, ref uint value, int bitCount = sizeof(uint) * 8) {
+			if (serializerWriteMode) PutAt(offset, value, bitCount);
+			else value = GetUIntAt(offset, bitCount);
+		}
+
+		public void Serialize(ref long value, int bitCount = sizeof(long) * 8) {
+			if (serializerWriteMode) Put(value, bitCount);
+			else value = GetLong(bitCount);
+		}
+		public void SerializeAt(int offset, ref long value, int bitCount = sizeof(long) * 8) {
+			if (serializerWriteMode) PutAt(offset, value, bitCount);
+			else value = GetLongAt(offset, bitCount);
+		}
+
+		public void Serialize(ref ulong value, int bitCount = sizeof(ulong) * 8) {
+			if (serializerWriteMode) Put(value, bitCount);
+			else value = GetULong(bitCount);
+		}
+		public void SerializeAt(int offset, ref ulong value, int bitCount = sizeof(ulong) * 8) {
+			if (serializerWriteMode) PutAt(offset, value, bitCount);
+			else value = GetULongAt(offset, bitCount);
+		}
+
+		public void Serialize(ref float value) {
+			if (serializerWriteMode) Put(value);
+			else value = GetFloat(); 
+		}
+		public void SerializeAt(int offset, ref float value) {
+			if (serializerWriteMode) PutAt(offset, value);
+			else value = GetFloatAt(offset);
+		}
+
+		public void Serialize(ref double value) {
+			if (serializerWriteMode) Put(value);
+			else value = GetDouble(); 
+		}
+		public void SerializeAt(int offset, ref double value) {
+			if (serializerWriteMode) PutAt(offset, value);
+			else value = GetDoubleAt(offset);
+		}
+
+
+		public void SerializeVariableLength(ref int value) {
+			if (serializerWriteMode) PutVariableLength(value);
+			else value = GetIntVariableLength(); 
+		}
+		public int SerializeVariableLengthAt(int offset, ref int value) {
+			int bytes;
+			if (serializerWriteMode) bytes = PutVariableLengthAt(offset, value);
+			else value = GetIntVariableLengthAt(offset, out bytes); 
+			return bytes;
+		}
+
+		public void SerializeVariableLength(ref uint value) {
+			if (serializerWriteMode) PutVariableLength(value);
+			else value = GetUIntVariableLength(); 
+		}
+		public int SerializeVariableLengthAt(int offset, ref uint value) {
+			int bytes;
+			if (serializerWriteMode) bytes = PutVariableLengthAt(offset, value);
+			else value = GetUIntVariableLengthAt(offset, out bytes); 
+			return bytes;
+		}
+
+		public void SerializeVariableLength(ref long value) {
+			if (serializerWriteMode) PutVariableLength(value);
+			else value = GetLongVariableLength();
+		}
+		public int SerializeVariableLengthAt(int offset, ref long value) {
+			int bytes;
+			if (serializerWriteMode) bytes = PutVariableLengthAt(offset, value); 
+			else value = GetLongVariableLengthAt(offset, out bytes);
+			return bytes;
+		}
+
+		public void SerializeVariableLength(ref ulong value) {
+			if (serializerWriteMode) PutVariableLength(value);
+			else value = GetULongVariableLength(); 
+		}
+		public int SerializeVariableLengthAt(int offset, ref ulong value) {
+			int bytes;
+			if (serializerWriteMode) bytes = PutVariableLengthAt(offset, value);
+			else value = GetULongVariableLengthAt(offset, out bytes);
+			return bytes;
+		}
+
+		
+		public void SerializeRanged(ref float value, float min, float max, int numberOfBits) {
+			if (serializerWriteMode) PutRanged(value, min, max, numberOfBits); 
+			else value = GetRangedFloat(min, max, numberOfBits);
+		}
+		public void SerializeRangedAt(int offset, ref float value, float min, float max, int numberOfBits) {
+			if (serializerWriteMode) PutRangedAt(offset, value, min, max, numberOfBits);
+			else value = GetRangedFloatAt(offset, min, max, numberOfBits); 
+		}
+
+		public void SerializeRanged(ref int value, int min, int max) {
+			if (serializerWriteMode) PutRanged(value, min, max); 
+			else value = GetRangedInt(min, max);
+		}
+		public void SerializeRangedAt(int offset, ref int value, int min, int max) {
+			if (serializerWriteMode) PutRangedAt(offset, value, min, max); 
+			else value = GetRangedIntAt(offset, min, max);
+		}
+
+		public void SerializeRanged(ref long value, long min, long max) {
+			if (serializerWriteMode) PutRanged(value, min, max); 
+			else value = GetRangedLong(min, max);
+		}
+		public void SerializeRangedAt(int offset, ref long value, long min, long max) {
+			if (serializerWriteMode) PutRangedAt(offset, value, min, max); 
+			else value = GetRangedLongAt(offset, min, max);
+		}
+
+
+		public void Serialize(byte[] v) {
+			Serialize(v, 0, v.Length * 8);
+		}
+		public void Serialize(byte[] src, int srcOffset, int length) {
+			BitBuffer bb = new BitBuffer(src, srcOffset, length);
+			Serialize(ref bb);
+		}
+		public void SerializeAt(int offset, ref BitBuffer src) {
+			if (serializerWriteMode) PutAt(offset, src);
+			else src = GetBitsAt(offset, src.Length); 
+		}
+		public void Serialize(ref BitBuffer bb) {
+			if (serializerWriteMode) Put(bb);
+			else bb = GetBits(bb.Length); 
+		}
 		#endregion
 	}
 }
