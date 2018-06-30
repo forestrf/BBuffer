@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace BBuffer {
 	/// <summary>
@@ -453,6 +454,18 @@ namespace BBuffer {
 			PutAt(Position, bb);
 			absPosition += bb.Length;
 		}
+		public void Put(string str) {
+			ByteAlignPosition();
+			if (simulateWrites) {
+				absPosition += sizeof(int) * 8 + Encoding.UTF8.GetByteCount(str);
+				return;
+			}
+			int lengthPosition = Position;
+			Put((int) 0);
+			int length = Encoding.UTF8.GetBytes(str, 0, str.Length, data, absPosition / 8);
+			PutAt(lengthPosition, length);
+			absPosition += length * 8;
+		}
 		#endregion
 
 		#region GetMethods
@@ -691,6 +704,13 @@ namespace BBuffer {
 			long rvalue = (long) GetUIntAt(offset, numBits);
 			return min + rvalue;
 		}
+		public string GetString() {
+			ByteAlignPosition();
+			int length = GetInt();
+			string str = Encoding.UTF8.GetString(data, absPosition / 8, length);
+			absPosition += length * 8;
+			return str;
+		}
 		#endregion
 
 		#region SerializeMethods
@@ -872,6 +892,10 @@ namespace BBuffer {
 		public void Serialize(ref BitBuffer bb) {
 			if (serializerWriteMode) Put(bb);
 			else bb = GetBits(bb.Length); 
+		}
+		public void Serialize(ref string str) {
+			if (serializerWriteMode) Put(str);
+			else str = GetString();
 		}
 		#endregion
 	}

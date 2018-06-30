@@ -133,7 +133,7 @@ namespace BBufferTests {
 		public void TestBitBufferPut2() {
 			BitBuffer b = new BitBuffer(new byte[1200]);
 			b.Position = 132;
-			
+
 			BitBuffer bToPut = new BitBuffer(new byte[1200]);
 			bToPut.Put((byte) 0);
 			bToPut.Put((byte) 1);
@@ -416,7 +416,7 @@ namespace BBufferTests {
 		[Test]
 		public void SerializingModeTest() {
 			var reference = new BitBuffer(new byte[1000]);
-			
+
 			reference.serializerWriteMode = true;
 			TestBothSerializingModes(reference);
 
@@ -456,6 +456,28 @@ namespace BBufferTests {
 					b.Serialize(ref j);
 					Assert.AreEqual(i, j);
 				}
+			}
+		}
+
+		[Test]
+		public void StringTest() {
+			BitBuffer b = new BitBuffer(new byte[10000]);
+			var bWrite = b;
+			var bRead = b;
+			string[] strings = new string[] {
+				"ABCDEFGHIJKLMNOPQRSTUVWXYZ /0123456789" +
+				"abcdefghijklmnopqrstuvwxyz £©µÀÆÖÞßéöÿ" +
+				"–—‘“”„†•…‰™œŠŸž€ ΑΒΓΔΩαβγδω АБВГДабвгд" +
+				"∀∂∈ℝ∧∪≡∞ ↑↗↨↻⇣ ┐┼╔╘░►☺♀ ﬁ�⑀₂ἠḂӥẄɐː⍎אԱა",
+				"\r\n",
+				"ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ"
+			};
+
+			foreach (var str in strings) {
+				bWrite.Put(str);
+			}
+			foreach (var str in strings) {
+				Assert.AreEqual(str, bRead.GetString());
 			}
 		}
 	}
