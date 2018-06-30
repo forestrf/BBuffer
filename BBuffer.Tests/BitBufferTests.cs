@@ -462,8 +462,6 @@ namespace BBufferTests {
 		[Test]
 		public void StringTest() {
 			BitBuffer b = new BitBuffer(new byte[10000]);
-			var bWrite = b;
-			var bRead = b;
 			string[] strings = new string[] {
 				"ABCDEFGHIJKLMNOPQRSTUVWXYZ /0123456789" +
 				"abcdefghijklmnopqrstuvwxyz £©µÀÆÖÞßéöÿ" +
@@ -473,11 +471,18 @@ namespace BBufferTests {
 				"ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ"
 			};
 
-			foreach (var str in strings) {
-				bWrite.Put(str);
-			}
-			foreach (var str in strings) {
-				Assert.AreEqual(str, bRead.GetString());
+			for (int offset = 0; offset < 16; offset++) {
+				var bCopy = b;
+				bCopy.Position += offset;
+				var bWrite = bCopy;
+				var bRead = bCopy;
+
+				foreach (var str in strings) {
+					bWrite.Put(str);
+				}
+				foreach (var str in strings) {
+					Assert.AreEqual(str, bRead.GetString());
+				}
 			}
 		}
 	}
