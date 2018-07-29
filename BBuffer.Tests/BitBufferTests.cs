@@ -464,7 +464,7 @@ namespace BBufferTests {
 		[Test]
 		public void StringTest() {
 			BitBuffer b = new BitBuffer(new byte[10000]);
-			string[] strings = new string[] {
+			List<string> strings = new List<string>() {
 				"ABCDEFGHIJKLMNOPQRSTUVWXYZ /0123456789" +
 				"abcdefghijklmnopqrstuvwxyz £©µÀÆÖÞßéöÿ" +
 				"–—‘“”„†•…‰™œŠŸž€ ΑΒΓΔΩαβγδω АБВГДабвгд" +
@@ -473,6 +473,13 @@ namespace BBufferTests {
 				"ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ"
 			};
 
+			Random r = new Random();
+			for (int i = 0; i < 128; i++) {
+				var s = new StringBuilder();
+				for (int j = 0; j < i; j++) s.Append((char) r.Next());
+				strings.Add(r.ToString());
+			}
+			
 			for (int offset = 0; offset < 16; offset++) {
 				var bCopy = b;
 				bCopy.Position += offset;

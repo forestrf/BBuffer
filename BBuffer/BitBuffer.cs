@@ -455,16 +455,14 @@ namespace BBuffer {
 			absPosition += bb.Length;
 		}
 		public void Put(string str) {
+			int bytesNeeded = Encoding.UTF8.GetByteCount(str);
+			if (bytesNeeded > ushort.MaxValue) throw new Exception("Too many bytes needed");
+			PutVariableLength((uint) (ushort) bytesNeeded);
 			ByteAlignPosition();
-			if (simulateWrites) {
-				absPosition += (sizeof(ushort) + Encoding.UTF8.GetByteCount(str)) * 8;
-				return;
+			if (!simulateWrites) {
+				Encoding.UTF8.GetBytes(str, 0, str.Length, data, absPosition / 8);
 			}
-			int lengthPosition = Position;
-			Put((ushort) 0);
-			ushort length = (ushort) Encoding.UTF8.GetBytes(str, 0, str.Length, data, absPosition / 8);
-			PutAt(lengthPosition, length);
-			absPosition += length * 8;
+			absPosition += bytesNeeded * 8;
 		}
 		#endregion
 
@@ -705,11 +703,11 @@ namespace BBuffer {
 			return min + rvalue;
 		}
 		public string GetString() {
+			ushort length = (ushort) GetUIntVariableLength();
 			ByteAlignPosition();
 			int start = absPosition / 8;
-			ushort length = GetUShort();
 			if (start + length < data.Length) {
-				string str = Encoding.UTF8.GetString(data, absPosition / 8, length);
+				string str = Encoding.UTF8.GetString(data, start, length);
 				absPosition += length * 8;
 				return str;
 			}
