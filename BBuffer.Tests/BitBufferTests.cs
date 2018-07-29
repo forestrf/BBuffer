@@ -479,15 +479,25 @@ namespace BBufferTests {
 				for (int j = 0; j < i; j++) s.Append((char) r.Next());
 				strings.Add(r.ToString());
 			}
-			
-			for (int offset = 0; offset < 16; offset++) {
-				var bCopy = b;
-				bCopy.Position += offset;
-				var bWrite = bCopy;
-				var bRead = bCopy;
 
-				foreach (var str in strings) {
-					bWrite.Put(str);
+			List<int> endPositions = new List<int>();
+			var b2 = b;
+			b2.serializerWriteMode = true;
+			foreach (var str in strings) {
+				b2.Put(str);
+				endPositions.Add(b2.Position);
+			}
+
+			for (int offset = 0; offset < 16; offset++) {
+				var bCopy = new BitBuffer(b.data, offset);
+				var bWrite = bCopy;
+				bWrite.serializerWriteMode = true;
+				var bRead = bCopy;
+				bRead.serializerWriteMode = false;
+
+				for (int i = 0; i < strings.Count; i++) {
+					bWrite.Put(strings[i]);
+					Assert.AreEqual(endPositions[i], bWrite.Position, "The string is writting a different ammount of bits depending on the offset of the array. This is wrong. offset=" + offset);
 				}
 				foreach (var str in strings) {
 					Assert.AreEqual(str, bRead.GetString());
@@ -509,6 +519,7 @@ namespace BBufferTests {
 			for (int offset = 0; offset < 16; offset++) {
 				var bCopy = b;
 				bCopy.Position += offset;
+				bCopy.serializerWriteMode = true;
 				var bWriteReal = bCopy;
 				var bWriteFalse = bCopy;
 				bWriteFalse.simulateWrites = true;

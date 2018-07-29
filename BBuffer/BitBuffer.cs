@@ -6,6 +6,7 @@ namespace BBuffer {
 	/// Struct that wraps an <cref=data>array</cref> and writes/reads to it in Little Endian.
 	/// It works on the hole array or on a subset of it.
 	/// Because it is an struct, you don't need to pool it but you may need to pass it to other methods using the ref keyword
+	/// ALL METHODS are GUARANTEED to write/read the same ammount of bits independent from the bit position or offset
 	/// </summary>
 	public struct BitBuffer {
 		/// <summary>
@@ -135,18 +136,6 @@ namespace BBuffer {
 
 		public bool HasData() {
 			return null != data;
-		}
-
-		/// <summary>
-		/// Advance the position of the buffer to byte align it, unless it is already aligned.
-		/// Read/write operations are faster when the buffer is byte aligned
-		/// </summary>
-		public void ByteAlignPosition() {
-			int delta = 0x7 & (sizeof(byte) - 1 - (0x7 & absPosition));
-			absPosition += delta;
-		}
-		public bool IsPositionByteAligned() {
-			return 0 == (0x7 & absPosition);
 		}
 
 		#region PutMethods
@@ -456,13 +445,9 @@ namespace BBuffer {
 		}
 		public void Put(string str) {
 			int bytesNeeded = Encoding.UTF8.GetByteCount(str);
-			if (bytesNeeded > ushort.MaxValue) throw new Exception("Too many bytes needed");
 			PutVariableLength((uint) (ushort) bytesNeeded);
-			ByteAlignPosition();
-			if (!simulateWrites) {
-				Encoding.UTF8.GetBytes(str, 0, str.Length, data, absPosition / 8);
-			}
-			absPosition += bytesNeeded * 8;
+			byte[] bytes = Encoding.UTF8.GetBytes(str);
+			Put(bytes);
 		}
 		#endregion
 
@@ -704,16 +689,8 @@ namespace BBuffer {
 		}
 		public string GetString() {
 			ushort length = (ushort) GetUIntVariableLength();
-			ByteAlignPosition();
-			int start = absPosition / 8;
-			if (start + length < data.Length) {
-				string str = Encoding.UTF8.GetString(data, start, length);
-				absPosition += length * 8;
-				return str;
-			}
-			else {
-				throw new ArgumentOutOfRangeException("start + length is outside of the buffer. start=" + start + ", length=" + length + ", buffer.length=" + data.Length);
-			}
+			var array = GetBits(length * 8).ToArray();
+			return Encoding.UTF8.GetString(array, 0, length);
 		}
 		#endregion
 
