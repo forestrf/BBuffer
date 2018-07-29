@@ -457,12 +457,12 @@ namespace BBuffer {
 		public void Put(string str) {
 			ByteAlignPosition();
 			if (simulateWrites) {
-				absPosition += sizeof(int) * 8 + Encoding.UTF8.GetByteCount(str);
+				absPosition += (sizeof(ushort) + Encoding.UTF8.GetByteCount(str)) * 8;
 				return;
 			}
 			int lengthPosition = Position;
-			Put((int) 0);
-			int length = Encoding.UTF8.GetBytes(str, 0, str.Length, data, absPosition / 8);
+			Put((ushort) 0);
+			ushort length = (ushort) Encoding.UTF8.GetBytes(str, 0, str.Length, data, absPosition / 8);
 			PutAt(lengthPosition, length);
 			absPosition += length * 8;
 		}
@@ -706,10 +706,16 @@ namespace BBuffer {
 		}
 		public string GetString() {
 			ByteAlignPosition();
-			int length = GetInt();
-			string str = Encoding.UTF8.GetString(data, absPosition / 8, length);
-			absPosition += length * 8;
-			return str;
+			int start = absPosition / 8;
+			ushort length = GetUShort();
+			if (start + length < data.Length) {
+				string str = Encoding.UTF8.GetString(data, absPosition / 8, length);
+				absPosition += length * 8;
+				return str;
+			}
+			else {
+				throw new ArgumentOutOfRangeException("start + length is outside of the buffer. start=" + start + ", length=" + length + ", buffer.length=" + data.Length);
+			}
 		}
 		#endregion
 

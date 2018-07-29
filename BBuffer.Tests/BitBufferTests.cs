@@ -1,6 +1,8 @@
 ﻿using BBuffer;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace BBufferTests {
 	[TestFixture]
@@ -483,6 +485,32 @@ namespace BBufferTests {
 				foreach (var str in strings) {
 					Assert.AreEqual(str, bRead.GetString());
 				}
+			}
+		}
+
+		[Test]
+		public void StringLengthTest() {
+			Random r = new Random();
+			BitBuffer b = new BitBuffer(new byte[10000]);
+			List<string> strings = new List<string>();
+			for (int i = 0; i < 128; i++) {
+				var s = new StringBuilder();
+				for (int j = 0; j < i; j++) s.Append((char) r.Next());
+				strings.Add(r.ToString());
+			}
+
+			for (int offset = 0; offset < 16; offset++) {
+				var bCopy = b;
+				bCopy.Position += offset;
+				var bWriteReal = bCopy;
+				var bWriteFalse = bCopy;
+				bWriteFalse.simulateWrites = true;
+
+				foreach (var str in strings) {
+					bWriteReal.Put(str);
+					bWriteFalse.Put(str);
+				}
+				Assert.AreEqual(bWriteReal.Position, bWriteFalse.Position);
 			}
 		}
 	}
