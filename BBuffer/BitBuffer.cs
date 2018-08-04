@@ -40,7 +40,37 @@ namespace BBuffer {
 		}
 
 		/// <summary>
-		/// Recycle a booled a buffer
+		/// Clone a buffer to a different byte array using the pool.
+		/// The length of this buffer with be used to decide the length of the needed byte array.
+		/// The returned buffer will be cropped
+		/// </summary>
+		/// <returns></returns>
+		public BitBuffer CloneUsingPool() {
+			var b = GetPooled(Log2BitPosition((uint) (Length + 8)));
+			b.absOffset = b.absPosition = absPosition & 0x7;
+			b.Put(this);
+			return b.GetCropToCurrentPosition();
+		}
+
+		/// <summary>
+		/// Answers the question:
+		/// What is the smallest value of x that 1 << x is equal or greather than <paramref name="number"/>.
+		/// Expected to be used when calling <see cref="GetPooled(byte)"/> giving this method the length of a buffer you want to clone.
+		/// </summary>
+		/// <param name="number"></param>
+		/// <returns></returns>
+		public static byte Log2BitPosition(uint number) {
+			for (byte i = 0; i < 32; i++) {
+				if (number <= 1 << i) {
+					return i;
+				}
+			}
+			return 31;
+		}
+
+		/// <summary>
+		/// Recycle a booled a buffer.
+		/// This method will not fail even if it didn't need to be recycled.
 		/// </summary>
 		public void Recycle() {
 			if (null != pooledBuffeHolder && lifeCounter == pooledBuffeHolder.lifeCounter) {
@@ -456,23 +486,38 @@ namespace BBuffer {
 			Put(new BitBuffer(src, srcOffset, length));
 		}
 		public void PutAt(int offset, BitBuffer src) {
-			int localPosition = Position;
-			bool srcArrIsByteAligned = 0 == (0x7 & src.absOffset);
-			bool dstArrIsByteAligned = 0 == (0x7 & (absOffset + offset));
-			if (srcArrIsByteAligned && dstArrIsByteAligned) {
-				Buffer.BlockCopy(src.data, src.absOffset / 8, data, (absOffset + offset) / 8, src.Length / 8);
-			}
-			else {
-				for (int i = 0; i < src.Length / 8; i++) {
-					PutAt(offset + i * 8, src.GetByteAt(i * 8));
+			int srcByteAlignment = 0x7 & src.absOffset;
+			int dstByteAlignment = 0x7 & (absOffset + offset);
+
+			bool srcArrIsByteAligned = 0 == srcByteAlignment;
+			bool dstArrIsByteAligned = 0 == dstByteAlignment;
+
+			if (srcByteAlignment == dstByteAlignment && !srcArrIsByteAligned) {
+				// Both have the same alineation but are not byte aligned. Copy first and last byte manually and the rest using blockcopy
+				int bitsToByteAlign = 8 - srcByteAlignment;
+				int bitsToWrite = src.Length >= bitsToByteAlign ? bitsToByteAlign : src.Length;
+				PutAt(offset, src.GetByteAt(0, bitsToWrite), bitsToWrite);
+				if (src.Length > bitsToByteAlign) {
+					PutAt(offset + bitsToByteAlign, new BitBuffer(src.data, src.absOffset + bitsToByteAlign, src.Length - bitsToByteAlign));
 				}
 			}
-			int writtenLength = ~0x7 & src.Length;
-			localPosition += writtenLength;
-			int lastByteLength = 0x7 & src.Length;
-			if (0 != lastByteLength) {
-				byte lastByte = src.GetByteAt(writtenLength, lastByteLength);
-				PutAt(localPosition, lastByte, lastByteLength);
+			else {
+				int writtenLength = ~0x7 & src.Length;
+				if (writtenLength > 0) {
+					if (srcArrIsByteAligned && dstArrIsByteAligned) {
+						Buffer.BlockCopy(src.data, src.absOffset / 8, data, (absOffset + offset) / 8, src.Length / 8);
+					}
+					else {
+						for (int i = 0; i < src.Length / 8; i++) {
+							PutAt(offset + i * 8, src.GetByteAt(i * 8));
+						}
+					}
+				}
+				int lastBitsCount = 0x7 & src.Length;
+				if (0 != lastBitsCount) {
+					byte lastByte = src.GetByteAt(writtenLength, lastBitsCount);
+					PutAt(offset + writtenLength, lastByte, lastBitsCount);
+				}
 			}
 		}
 		public void Put(BitBuffer bb) {

@@ -386,7 +386,7 @@ namespace BBufferTests {
 
 		[Test]
 		public void ToArrayTest() {
-			Random r = new Random();
+			Random r = new Random(0);
 			for (int offset = 0; offset < 16; offset++) {
 				byte[] data = new byte[40];
 				r.NextBytes(data);
@@ -399,7 +399,7 @@ namespace BBufferTests {
 
 		[Test]
 		public void BufferPutBuffer() {
-			Random r = new Random();
+			Random r = new Random(0);
 			for (int offset1 = 0; offset1 < 16; offset1++) {
 				byte[] data = new byte[40];
 				r.NextBytes(data);
@@ -412,6 +412,34 @@ namespace BBufferTests {
 					var newArr = b.ToArray();
 					CollectionAssert.AreEqual(oldArray, newArr, "offset1=" + offset1 + ", offset2 = " + offset2);
 					Assert.IsTrue(dBitBuffer.BufferEquals(b), "offset1=" + offset1 + ", offset2 = " + offset2);
+				}
+			}
+		}
+
+		[Test]
+		public void BufferPutBufferTestBounds() {
+			for (int offset1 = 0; offset1 < 16; offset1++) {
+				for (int offset2 = 0; offset2 < 16; offset2++) {
+					for (int length = 2; length < 14; length++) {
+						byte[] data = new byte[40];
+						for (int i = 0; i < data.Length; i++) data[i] = 0xff;
+						
+						var dBitBuffer = new BitBuffer(data, offset2, length);
+
+						var bWrite = dBitBuffer;
+						bWrite.Put(false);
+						bWrite.SkipBits(length - 2);
+						bWrite.Put(false);
+
+						var b = new BitBuffer(new byte[60], offset1);
+						b.Put(dBitBuffer);
+
+						var oldArray = dBitBuffer.ToArray();
+						b = b.GetCropToCurrentPosition();
+						var newArr = b.ToArray();
+						CollectionAssert.AreEqual(oldArray, newArr, "offset1=" + offset1 + ", offset2 = " + offset2 + ", length=" + length);
+						Assert.IsTrue(dBitBuffer.BufferEquals(b), "offset1=" + offset1 + ", offset2 = " + offset2 + ", length=" + length);
+					}
 				}
 			}
 		}
@@ -474,7 +502,7 @@ namespace BBufferTests {
 				"ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ"
 			};
 
-			Random r = new Random();
+			Random r = new Random(0);
 			for (int i = 0; i < 128; i++) {
 				var s = new StringBuilder();
 				for (int j = 0; j < i; j++) s.Append((char) r.Next());
@@ -508,7 +536,7 @@ namespace BBufferTests {
 
 		[Test]
 		public void StringLengthTest() {
-			Random r = new Random();
+			Random r = new Random(0);
 			BitBuffer b = new BitBuffer(new byte[10000]);
 			List<string> strings = new List<string>();
 			for (int i = 0; i < 128; i++) {
