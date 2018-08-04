@@ -308,8 +308,9 @@ namespace BBufferTests {
 
 		[Test]
 		public void SimulateWrites() {
-			var b = new BitBuffer(new byte[10000]);
-			b.simulateWrites = true;
+			var b = new BitBuffer(new byte[10000]) {
+				simulateWrites = true
+			};
 			b.Put(new BitBuffer(new byte[] { 0xff, 0xff, 0xff }, 0, 3));
 			b.Put(true);
 			b.Put(new byte[] { 0xff, 0xff, 0xff });

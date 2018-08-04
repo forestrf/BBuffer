@@ -9,6 +9,46 @@ namespace BBuffer {
 	/// ALL METHODS are GUARANTEED to write/read the same ammount of bits independent from the bit position or offset
 	/// </summary>
 	public struct BitBuffer {
+		#region pooling
+		private readonly int lifeCounter;
+		private PooledBufferHolder pooledBuffeHolder;
+
+		internal BitBuffer(PooledBufferHolder pooledBuffeHolder) : this() {
+			this.pooledBuffeHolder = pooledBuffeHolder;
+			lifeCounter = pooledBuffeHolder.lifeCounter;
+			data = pooledBuffeHolder.buffer;
+		}
+
+		/// <summary>
+		/// Check if this buffer can be used or, if it is a pooled buffer, if it has already been pooled.
+		/// In case it is not valid it MUST NOT be used.
+		/// </summary>
+		public bool IsValid() {
+			return null != data && (null == pooledBuffeHolder || lifeCounter == pooledBuffeHolder.lifeCounter);
+		}
+
+		/// <summary>
+		/// Get a buffer from the pool. It should be recycled later calling at <see cref="Recycle"/>
+		/// </summary>
+		/// <param name="byteCountPowerOf2">minimum byte count = 1 << this</param>
+		public static BitBuffer GetPooled(byte byteCountPowerOf2) {
+			var obj = PooledBufferHolder.GetPooled(byteCountPowerOf2);
+			if (null == obj) {
+				obj = new PooledBufferHolder(new byte[1 << byteCountPowerOf2], byteCountPowerOf2);
+			}
+			return new BitBuffer(obj);
+		}
+
+		/// <summary>
+		/// Recycle a booled a buffer
+		/// </summary>
+		public void Recycle() {
+			if (null != pooledBuffeHolder && lifeCounter == pooledBuffeHolder.lifeCounter) {
+				pooledBuffeHolder.Recycle();
+			}
+		}
+		#endregion
+
 		/// <summary>
 		/// Wrapped array
 		/// </summary>
@@ -54,8 +94,8 @@ namespace BBuffer {
 			absOffset = offset;
 		}
 
-		public void SkipBytes(int v) {
-			SkipBits(8 * v);
+		public void SkipBytes(int numberOfBytes) {
+			SkipBits(8 * numberOfBytes);
 		}
 
 		public void SkipBits(int numberOfBits) {
