@@ -84,5 +84,21 @@ namespace BBufferTests {
 			}
 			return 31;
 		}
+
+		[Test]
+		public void CloneBufferWithPoolTest() {
+			Random r = new Random(0);
+			for (int offset = 0; offset < 16; offset++) {
+				var b = new BitBuffer(new byte[32], offset);
+				for (int k = 0; k < (b.data.Length - (int) Math.Ceiling(offset / 8f)) / sizeof(int); k++) {
+					b.Put(r.Next());
+				}
+				var clone = b.CloneUsingPool();
+
+				Assert.IsTrue(b.BufferEquals(clone), "offset=" + offset);
+
+				clone.Recycle();
+			}
+		}
 	}
 }
