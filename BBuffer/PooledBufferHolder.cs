@@ -25,7 +25,7 @@ namespace BBuffer {
 		private readonly object key = new object();
 
 		private bool isPooled;
-		
+
 		public PooledBufferHolder(byte[] buffer, byte byteCountPowerOf2) {
 			this.buffer = buffer;
 			this.byteCountPowerOf2 = byteCountPowerOf2;

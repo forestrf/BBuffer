@@ -31,7 +31,8 @@ namespace BBuffer {
 		/// Get a buffer from the pool. It should be recycled later calling at <see cref="Recycle"/>
 		/// </summary>
 		/// <param name="byteCountPowerOf2">minimum byte count = 1 << this</param>
-		public static BitBuffer GetPooled(byte byteCountPowerOf2) {
+		public static BitBuffer GetPooled(ushort size) {
+			byte byteCountPowerOf2 = Log2BitPosition(size);
 			var obj = PooledBufferHolder.GetPooled(byteCountPowerOf2);
 			if (null == obj) {
 				obj = new PooledBufferHolder(new byte[1 << byteCountPowerOf2], byteCountPowerOf2);
@@ -46,10 +47,74 @@ namespace BBuffer {
 		/// </summary>
 		/// <returns></returns>
 		public BitBuffer CloneUsingPool() {
-			var b = GetPooled(Log2BitPosition((uint) (Length + 8)));
+			var b = GetPooled((ushort) (Length + 8));
 			b.absOffset = b.absPosition = absPosition & 0x7;
 			b.Put(this);
 			return b.GetCropToCurrentPosition();
+		}
+
+		private static byte Test(uint number, int left, int right) {
+			int midPoint = (right + left) / 2;
+			uint checkValue = 1u << midPoint;
+			if (number == checkValue) return (byte) midPoint;
+			if (number > checkValue) {
+				if (number < checkValue << 1) return (byte) (midPoint + 1);
+				else return Test(number, midPoint + 1, right);
+			}
+			else
+				return Test(number, left, midPoint - 1);
+		}
+
+		// 48 ns
+		internal static byte Log2BitPosition1(uint number) {
+			if (number <= 1) return 0;
+			return Test(number, 0, 31);
+		}
+
+		// 35 ns
+		internal static byte Log2BitPosition2(uint number) {
+			if (number <= 1 << 0) return 0;
+			if (number <= 1 << 1) return 1;
+			if (number <= 1 << 2) return 2;
+			if (number <= 1 << 3) return 3;
+			if (number <= 1 << 4) return 4;
+			if (number <= 1 << 5) return 5;
+			if (number <= 1 << 6) return 6;
+			if (number <= 1 << 7) return 7;
+			if (number <= 1 << 8) return 8;
+			if (number <= 1 << 9) return 9;
+			if (number <= 1 << 10) return 10;
+			if (number <= 1 << 11) return 11;
+			if (number <= 1 << 12) return 12;
+			if (number <= 1 << 13) return 13;
+			if (number <= 1 << 14) return 14;
+			if (number <= 1 << 15) return 15;
+			if (number <= 1 << 16) return 16;
+			if (number <= 1 << 17) return 17;
+			if (number <= 1 << 18) return 18;
+			if (number <= 1 << 19) return 19;
+			if (number <= 1 << 20) return 20;
+			if (number <= 1 << 21) return 21;
+			if (number <= 1 << 22) return 22;
+			if (number <= 1 << 23) return 23;
+			if (number <= 1 << 24) return 24;
+			if (number <= 1 << 25) return 25;
+			if (number <= 1 << 26) return 26;
+			if (number <= 1 << 27) return 27;
+			if (number <= 1 << 28) return 28;
+			if (number <= 1 << 29) return 29;
+			if (number <= 1 << 30) return 30;
+			return 31;
+		}
+
+		// 66 ns
+		internal static byte Log2BitPosition3(uint number) {
+			for (byte i = 0; i < 32; i++) {
+				if (number <= 1 << i) {
+					return i;
+				}
+			}
+			return 31;
 		}
 
 		/// <summary>
@@ -59,12 +124,38 @@ namespace BBuffer {
 		/// </summary>
 		/// <param name="number"></param>
 		/// <returns></returns>
-		public static byte Log2BitPosition(uint number) {
-			for (byte i = 0; i < 32; i++) {
-				if (number <= 1 << i) {
-					return i;
-				}
-			}
+		internal static byte Log2BitPosition(uint number) {
+			if (number <= 1 << 0) return 0;
+			if (number <= 1 << 1) return 1;
+			if (number <= 1 << 2) return 2;
+			if (number <= 1 << 3) return 3;
+			if (number <= 1 << 4) return 4;
+			if (number <= 1 << 5) return 5;
+			if (number <= 1 << 6) return 6;
+			if (number <= 1 << 7) return 7;
+			if (number <= 1 << 8) return 8;
+			if (number <= 1 << 9) return 9;
+			if (number <= 1 << 10) return 10;
+			if (number <= 1 << 11) return 11;
+			if (number <= 1 << 12) return 12;
+			if (number <= 1 << 13) return 13;
+			if (number <= 1 << 14) return 14;
+			if (number <= 1 << 15) return 15;
+			if (number <= 1 << 16) return 16;
+			if (number <= 1 << 17) return 17;
+			if (number <= 1 << 18) return 18;
+			if (number <= 1 << 19) return 19;
+			if (number <= 1 << 20) return 20;
+			if (number <= 1 << 21) return 21;
+			if (number <= 1 << 22) return 22;
+			if (number <= 1 << 23) return 23;
+			if (number <= 1 << 24) return 24;
+			if (number <= 1 << 25) return 25;
+			if (number <= 1 << 26) return 26;
+			if (number <= 1 << 27) return 27;
+			if (number <= 1 << 28) return 28;
+			if (number <= 1 << 29) return 29;
+			if (number <= 1 << 30) return 30;
 			return 31;
 		}
 

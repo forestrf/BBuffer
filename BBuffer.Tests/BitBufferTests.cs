@@ -423,7 +423,7 @@ namespace BBufferTests {
 					for (int length = 2; length < 14; length++) {
 						byte[] data = new byte[40];
 						for (int i = 0; i < data.Length; i++) data[i] = 0xff;
-						
+
 						var dBitBuffer = new BitBuffer(data, offset2, length);
 
 						var bWrite = dBitBuffer;

@@ -1,6 +1,7 @@
 ﻿using BBuffer;
 using NUnit.Framework;
 using System;
+using System.Diagnostics;
 using System.Threading;
 
 namespace BBufferTests {
@@ -16,11 +17,11 @@ namespace BBufferTests {
 					try {
 						Random randomInitializer = new Random(index);
 						for (int j = 0; j < 50; j++) {
-							byte powerOfTwoLength = (byte) (randomInitializer.Next() % 17);
+							int size = randomInitializer.Next() % ushort.MaxValue;
 							var randomInit = randomInitializer.Next();
 
 							Random r = new Random(randomInit);
-							var b = BitBuffer.GetPooled(powerOfTwoLength);
+							var b = BitBuffer.GetPooled((ushort) size);
 							Assert.IsTrue(b.IsValid());
 							var bRead = b;
 							var bWrite = b;
@@ -36,7 +37,7 @@ namespace BBufferTests {
 							b.Recycle();
 							Assert.IsFalse(b.IsValid());
 						}
-						
+
 
 						mres[index].Set();
 					}
@@ -74,6 +75,41 @@ namespace BBufferTests {
 
 				Assert.AreEqual(reference, test, "Number=" + n);
 			}
+		}
+
+		[Test]
+		public void Log2BitPositionBenchmark() {
+			// Warm up
+			BitBuffer.Log2BitPosition1(123);
+			BitBuffer.Log2BitPosition2(123);
+			BitBuffer.Log2BitPosition3(123);
+
+			int iterations = 100000;
+			int modulo = ushort.MaxValue;
+
+			Random r = new Random(0);
+			var s = Stopwatch.StartNew();
+			for (uint i = 0; i < iterations; i++) {
+				uint n = (uint) (r.Next() % modulo);
+				int test = BitBuffer.Log2BitPosition1(n);
+			}
+			Console.WriteLine("Log2BitPosition1 = " + (s.Elapsed.TotalMilliseconds / iterations) * 1000000 + "ns");
+
+			r = new Random(0);
+			s = Stopwatch.StartNew();
+			for (uint i = 0; i < iterations; i++) {
+				uint n = (uint) (r.Next() % modulo);
+				int test = BitBuffer.Log2BitPosition2(n);
+			}
+			Console.WriteLine("Log2BitPosition2 = " + (s.Elapsed.TotalMilliseconds / iterations) * 1000000 + "ns");
+
+			r = new Random(0);
+			s = Stopwatch.StartNew();
+			for (uint i = 0; i < iterations; i++) {
+				uint n = (uint) (r.Next() % modulo);
+				int test = BitBuffer.Log2BitPosition3(n);
+			}
+			Console.WriteLine("Log2BitPosition3 = " + (s.Elapsed.TotalMilliseconds / iterations) * 1000000 + "ns");
 		}
 
 		private int GetCeilPowerOfTwo(uint number) {
