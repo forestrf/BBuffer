@@ -13,10 +13,11 @@ namespace BBuffer {
 		private readonly int lifeCounter;
 		private PooledBufferHolder pooledBuffeHolder;
 
-		internal BitBuffer(PooledBufferHolder pooledBuffeHolder) : this() {
+		internal BitBuffer(PooledBufferHolder pooledBuffeHolder, int length) : this() {
 			this.pooledBuffeHolder = pooledBuffeHolder;
 			lifeCounter = pooledBuffeHolder.lifeCounter;
 			data = pooledBuffeHolder.buffer;
+			absLength = length;
 		}
 
 		/// <summary>
@@ -37,7 +38,7 @@ namespace BBuffer {
 			if (null == obj) {
 				obj = new PooledBufferHolder(new byte[1 << byteCountPowerOf2], byteCountPowerOf2);
 			}
-			return new BitBuffer(obj);
+			return new BitBuffer(obj, size);
 		}
 
 		/// <summary>

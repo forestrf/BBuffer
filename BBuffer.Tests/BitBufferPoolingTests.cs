@@ -16,11 +16,11 @@ namespace BBufferTests {
 					try {
 						Random randomInitializer = new Random(index);
 						for (int j = 0; j < 50; j++) {
-							int size = randomInitializer.Next() % ushort.MaxValue;
+							ushort size = (ushort) randomInitializer.Next();
 							var randomInit = randomInitializer.Next();
 
 							Random r = new Random(randomInit);
-							var b = BitBuffer.GetPooled((ushort) size);
+							var b = BitBuffer.GetPooled(size);
 							Assert.IsTrue(b.IsValid());
 							var bRead = b;
 							var bWrite = b;
