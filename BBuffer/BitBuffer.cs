@@ -11,10 +11,10 @@ namespace BBuffer {
 	public struct BitBuffer {
 		#region pooling
 		private readonly int lifeCounter;
-		private PooledBufferHolder pooledBuffeHolder;
+		private PooledBufferHolder pooledBufferHolder;
 
 		internal BitBuffer(PooledBufferHolder pooledBuffeHolder, int length) : this() {
-			this.pooledBuffeHolder = pooledBuffeHolder;
+			this.pooledBufferHolder = pooledBuffeHolder;
 			lifeCounter = pooledBuffeHolder.lifeCounter;
 			data = pooledBuffeHolder.buffer;
 			absLength = length;
@@ -25,7 +25,7 @@ namespace BBuffer {
 		/// In case it is not valid it MUST NOT be used.
 		/// </summary>
 		public bool IsValid() {
-			return null != data && (null == pooledBuffeHolder || lifeCounter == pooledBuffeHolder.lifeCounter);
+			return null != data && (null == pooledBufferHolder || lifeCounter == pooledBufferHolder.lifeCounter);
 		}
 
 		/// <summary>
@@ -84,8 +84,8 @@ namespace BBuffer {
 		/// This method will not fail even if it didn't need to be recycled.
 		/// </summary>
 		public void Recycle() {
-			if (null != pooledBuffeHolder && lifeCounter == pooledBuffeHolder.lifeCounter) {
-				pooledBuffeHolder.Recycle();
+			if (null != pooledBufferHolder && lifeCounter == pooledBufferHolder.lifeCounter) {
+				pooledBufferHolder.Recycle();
 			}
 		}
 		#endregion
