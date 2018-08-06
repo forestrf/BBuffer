@@ -100,5 +100,15 @@ namespace BBufferTests {
 				clone.Recycle();
 			}
 		}
+
+		[Test]
+		public void CloneBufferOffset() {
+			BitBuffer b = new BitBuffer(new byte[1 << 16]);
+			b.CloneUsingPool();
+			for (int i = 0; i < 16; i++) {
+				b.absOffset += 1;
+				b.CloneUsingPool();
+			}
+		}
 	}
 }

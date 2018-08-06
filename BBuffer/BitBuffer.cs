@@ -48,7 +48,7 @@ namespace BBuffer {
 		/// </summary>
 		/// <returns></returns>
 		public BitBuffer CloneUsingPool() {
-			var b = GetPooled((ushort) (Length + 8));
+			var b = GetPooled((ushort) (Math.Min(Length + 8, ushort.MaxValue)));
 			b.absOffset = b.absPosition = absPosition & 0x7;
 			b.Put(this);
 			return b.GetCropToCurrentPosition();
@@ -76,7 +76,8 @@ namespace BBuffer {
 			if (number <= 1 << 12) return 12;
 			if (number <= 1 << 13) return 13;
 			if (number <= 1 << 14) return 14;
-			return 15;
+			if (number <= 1 << 15) return 15;
+			return 16;
 		}
 
 		/// <summary>
