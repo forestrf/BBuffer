@@ -36,13 +36,13 @@ namespace BBuffer {
 			}
 			public void Write(byte[] buffer, int bitOffset, int bitCount) {
 				if (IsBigEndian) {
-					Write(buffer, bitOffset, bitCount, b7, b6, b5, b4, b3, b2, b1, b0);
+					WriteInternal(buffer, bitOffset, bitCount);
 				}
 				else {
-					Write(buffer, bitOffset, bitCount, b0, b1, b2, b3, b4, b5, b6, b7);
+					WriteInternal(buffer, bitOffset, bitCount);
 				}
 			}
-			private void Write(byte[] buffer, int offset, int count, byte b0, byte b1, byte b2, byte b3, byte b4, byte b5, byte b6, byte b7) {
+			private void WriteInternal(byte[] buffer, int offset, int count) {
 				int bitOffsetInByte = 0x7 & offset;
 				if (0 == bitOffsetInByte) {
 					if (count == 64) {
@@ -102,15 +102,16 @@ namespace BBuffer {
 
 			public ulong Read(byte[] buffer, int bitOffset, int bitCount) {
 				if (IsBigEndian) {
-					Read(buffer, bitOffset, bitCount, ref b7, ref b6, ref b5, ref b4, ref b3, ref b2, ref b1, ref b0);
+					ReadInternal(buffer, bitOffset, bitCount, ref b7, ref b6, ref b5, ref b4, ref b3, ref b2, ref b1, ref b0);
 				}
 				else {
-					Read(buffer, bitOffset, bitCount, ref b0, ref b1, ref b2, ref b3, ref b4, ref b5, ref b6, ref b7);
+					ReadInternal(buffer, bitOffset, bitCount, ref b0, ref b1, ref b2, ref b3, ref b4, ref b5, ref b6, ref b7);
 				}
 				return value;
 			}
-			private static void Read(byte[] buffer, int offset, int count, ref byte b0, ref byte b1, ref byte b2, ref byte b3, ref byte b4, ref byte b5, ref byte b6, ref byte b7) {
-				if (0 == (0x7 & offset)) {
+			private void ReadInternal(byte[] buffer, int offset, int count, ref byte b0, ref byte b1, ref byte b2, ref byte b3, ref byte b4, ref byte b5, ref byte b6, ref byte b7) {
+				int bitOffsetInByte = 0x7 & offset;
+				if (0 == bitOffsetInByte) {
 					if (count == 64) {
 						b0 = buffer[offset / 8];
 						b1 = buffer[offset / 8 + 1];
@@ -178,35 +179,14 @@ namespace BBuffer {
 					}
 				}
 				else {
-					b0 = Byte.Read(buffer, offset, count);
 					if (count > 8) {
-						b1 = Byte.Read(buffer, offset + 8, count - 8);
-						if (count > 16) {
-							b2 = Byte.Read(buffer, offset + 16, count - 16);
-							if (count > 24) {
-								b3 = Byte.Read(buffer, offset + 24, count - 24);
-								if (count > 32) {
-									b4 = Byte.Read(buffer, offset + 32, count - 32);
-									if (count > 40) {
-										b5 = Byte.Read(buffer, offset + 40, count - 40);
-										if (count > 48) {
-											b6 = Byte.Read(buffer, offset + 48, count - 48);
-											if (count > 56) {
-												b7 = Byte.Read(buffer, offset + 56, count - 56);
-											}
-											else b7 = 0;
-										}
-										else b6 = b7 = 0;
-									}
-									else b5 = b6 = b7 = 0;
-								}
-								else b4 = b5 = b6 = b7 = 0;
-							}
-							else b3 = b4 = b5 = b6 = b7 = 0;
-						}
-						else b2 = b3 = b4 = b5 = b6 = b7 = 0;
+						var bitsToAlign = 8 - bitOffsetInByte;
+						value = Byte.Read(buffer, offset, bitsToAlign) + (new ULong().Read(buffer, offset + bitsToAlign, count - bitsToAlign) << bitsToAlign);
 					}
-					else b1 = b2 = b3 = b4 = b5 = b6 = b7 = 0;
+					else {
+						b0 = Byte.Read(buffer, offset, count);
+						b1 = b2 = b3 = b4 = b5 = b6 = b7 = 0;
+					}
 				}
 			}
 		}
@@ -277,15 +257,16 @@ namespace BBuffer {
 
 			public uint Read(byte[] buffer, int bitOffset, int bitCount) {
 				if (IsBigEndian) {
-					Read(buffer, bitOffset, bitCount, ref b3, ref b2, ref b1, ref b0);
+					ReadInternal(buffer, bitOffset, bitCount);
 				}
 				else {
-					Read(buffer, bitOffset, bitCount, ref b0, ref b1, ref b2, ref b3);
+					ReadInternal(buffer, bitOffset, bitCount);
 				}
 				return value;
 			}
-			private static void Read(byte[] buffer, int offset, int count, ref byte b0, ref byte b1, ref byte b2, ref byte b3) {
-				if (0 == (0x7 & offset)) {
+			private void ReadInternal(byte[] buffer, int offset, int count) {
+				int bitOffsetInByte = 0x7 & offset;
+				if (0 == bitOffsetInByte) {
 					if (count == 32) {
 						// Special case, more performance
 						b0 = buffer[offset / 8];
@@ -322,19 +303,13 @@ namespace BBuffer {
 					}
 				}
 				else {
-					b0 = Byte.Read(buffer, offset, count);
 					if (count > 8) {
-						b1 = Byte.Read(buffer, offset + 8, count - 8);
-						if (count > 16) {
-							b2 = Byte.Read(buffer, offset + 16, count - 16);
-							if (count > 24) {
-								b3 = Byte.Read(buffer, offset + 24, count - 24);
-							}
-							else b3 = 0;
-						}
-						else b2 = b3 = 0;
+						var bitsToAlign = 8 - bitOffsetInByte;
+						value = Byte.Read(buffer, offset, bitsToAlign) + (new UInt().Read(buffer, offset + bitsToAlign, count - bitsToAlign) << bitsToAlign);					}
+					else {
+						b0 = Byte.Read(buffer, offset, count);
+						b1 = b2 = b3 = 0;
 					}
-					else b1 = b2 = b3 = 0;
 				}
 			}
 		}
@@ -411,8 +386,8 @@ namespace BBuffer {
 
 		public static class Byte {
 			public static void Write(byte value, byte[] buffer, int bitOffset, int bitCount) {
-				if (bitCount > 8) bitCount = 8;
-				else if (bitCount <= 0) return;
+				if (bitCount <= 0) return;
+				else if (bitCount > 8) bitCount = 8;
 
 				int bitOffsetInByte = 0x7 & bitOffset;
 				if (0 == bitOffsetInByte) {
