@@ -44,7 +44,17 @@ namespace BBuffer {
 			}
 			private static void Write(byte[] buffer, int offset, int count, byte b0, byte b1, byte b2, byte b3, byte b4, byte b5, byte b6, byte b7) {
 				if (0 == (0x7 & offset)) {
-					if (count >= 8) {
+					if (count == 64) {
+						buffer[offset / 8] = b0;
+						buffer[offset / 8 + 1] = b1;
+						buffer[offset / 8 + 2] = b2;
+						buffer[offset / 8 + 3] = b3;
+						buffer[offset / 8 + 4] = b4;
+						buffer[offset / 8 + 5] = b5;
+						buffer[offset / 8 + 6] = b6;
+						buffer[offset / 8 + 7] = b7;
+					}
+					else if (count >= 8) {
 						buffer[offset / 8] = b0;
 						if (count >= 16) {
 							buffer[offset / 8 + 1] = b1;
@@ -100,6 +110,16 @@ namespace BBuffer {
 			}
 			private static void Read(byte[] buffer, int offset, int count, ref byte b0, ref byte b1, ref byte b2, ref byte b3, ref byte b4, ref byte b5, ref byte b6, ref byte b7) {
 				if (0 == (0x7 & offset)) {
+					if (count == 64) {
+						b0 = buffer[offset / 8];
+						b1 = buffer[offset / 8 + 1];
+						b2 = buffer[offset / 8 + 2];
+						b3 = buffer[offset / 8 + 3];
+						b4 = buffer[offset / 8 + 4];
+						b5 = buffer[offset / 8 + 5];
+						b6 = buffer[offset / 8 + 6];
+						b7 = buffer[offset / 8 + 7];
+					}
 					if (count >= 8) {
 						b0 = buffer[offset / 8];
 						if (count >= 16) {
@@ -218,7 +238,13 @@ namespace BBuffer {
 			}
 			private static void Write(byte[] buffer, int offset, int count, byte b0, byte b1, byte b2, byte b3) {
 				if (0 == (0x7 & offset)) {
-					if (count >= 8) {
+					if (count == 32) {
+						buffer[offset / 8] = b0;
+						buffer[offset / 8 + 1] = b1;
+						buffer[offset / 8 + 2] = b2;
+						buffer[offset / 8 + 3] = b3;
+					}
+					else if (count >= 8) {
 						buffer[offset / 8] = b0;
 						if (count >= 16) {
 							buffer[offset / 8 + 1] = b1;
@@ -254,7 +280,14 @@ namespace BBuffer {
 			}
 			private static void Read(byte[] buffer, int offset, int count, ref byte b0, ref byte b1, ref byte b2, ref byte b3) {
 				if (0 == (0x7 & offset)) {
-					if (count >= 8) {
+					if (count == 32) {
+						// Special case, more performance
+						b0 = buffer[offset / 8];
+						b1 = buffer[offset / 8 + 1];
+						b2 = buffer[offset / 8 + 2];
+						b3 = buffer[offset / 8 + 3];
+					}
+					else if (count >= 8) {
 						b0 = buffer[offset / 8];
 						if (count >= 16) {
 							b1 = buffer[offset / 8 + 1];
