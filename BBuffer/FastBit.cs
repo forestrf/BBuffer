@@ -36,13 +36,13 @@ namespace BBuffer {
 			}
 			public void Write(byte[] buffer, int bitOffset, int bitCount) {
 				if (IsBigEndian) {
-					WriteInternal(buffer, bitOffset, bitCount);
+					WriteInternal(buffer, bitOffset, bitCount, b7, b6, b5, b4, b3, b2, b1, b0);
 				}
 				else {
-					WriteInternal(buffer, bitOffset, bitCount);
+					WriteInternal(buffer, bitOffset, bitCount, b0, b1, b2, b3, b4, b5, b6, b7);
 				}
 			}
-			private void WriteInternal(byte[] buffer, int offset, int count) {
+			private void WriteInternal(byte[] buffer, int offset, int count, byte b0, byte b1, byte b2, byte b3, byte b4, byte b5, byte b6, byte b7) {
 				int bitOffsetInByte = 0x7 & offset;
 				if (0 == bitOffsetInByte) {
 					if (count == 64) {
@@ -257,14 +257,14 @@ namespace BBuffer {
 
 			public uint Read(byte[] buffer, int bitOffset, int bitCount) {
 				if (IsBigEndian) {
-					ReadInternal(buffer, bitOffset, bitCount);
+					ReadInternal(buffer, bitOffset, bitCount, ref b3, ref b2, ref b1, ref b0);
 				}
 				else {
-					ReadInternal(buffer, bitOffset, bitCount);
+					ReadInternal(buffer, bitOffset, bitCount, ref b0, ref b1, ref b2, ref b3);
 				}
 				return value;
 			}
-			private void ReadInternal(byte[] buffer, int offset, int count) {
+			private void ReadInternal(byte[] buffer, int offset, int count, ref byte b0, ref byte b1, ref byte b2, ref byte b3) {
 				int bitOffsetInByte = 0x7 & offset;
 				if (0 == bitOffsetInByte) {
 					if (count == 32) {
@@ -358,7 +358,7 @@ namespace BBuffer {
 				}
 				return value;
 			}
-			private static void Read(byte[] buffer, int offset, int count, ref byte b0, ref byte b1) {
+			private void Read(byte[] buffer, int offset, int count, ref byte b0, ref byte b1) {
 				if (0 == (0x7 & offset)) {
 					if (count >= 8) {
 						b0 = buffer[offset / 8];
@@ -409,6 +409,7 @@ namespace BBuffer {
 					}
 				}
 			}
+
 			public static byte Read(byte[] buffer, int bitOffset, int bitCount) {
 				if (bitCount <= 0) return 0;
 
