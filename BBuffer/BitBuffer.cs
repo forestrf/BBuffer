@@ -976,5 +976,20 @@ namespace BBuffer {
 			else str = GetString();
 		}
 		#endregion
+
+		public override string ToString() {
+			StringBuilder s = new StringBuilder("Buffer ");
+			if (HasData()) {
+				if (null != pooledBufferHolder) s.Append("(From Pool) ");
+				s.Append(serializerWriteMode ? "(W) " : "(R) ");
+				if (simulateWrites) s.Append("(Simulating writes) ");
+				s.Append("Position=").Append(Position).Append(" ");
+				s.Append("Length=").Append(Length).Append(" bits, ").Append(Math.Ceiling(Length / 8f)).Append(" Bytes");
+			}
+			else {
+				s.Append("(NO DATA)");
+			}
+			return s.ToString();
+		}
 	}
 }
