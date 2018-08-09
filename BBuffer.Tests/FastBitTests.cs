@@ -20,7 +20,7 @@ namespace BBufferTests {
 						var mask = Mask(bits);
 						ResetArray(testArr, 0x00);
 						FastBit.Byte.Write(a, testArr, offset, bits);
-						Assert.AreEqual(a & mask, FastBit.Byte.Read(testArr, offset, bits), "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
+						Assert.AreEqual(a & mask, FastBit.Byte.Read(testArr, offset, bits), "\nvalue=" + a + "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
 					}
 				}
 
@@ -29,7 +29,7 @@ namespace BBufferTests {
 						var mask = Mask(bits);
 						ResetArray(testArr, 0xff);
 						FastBit.Byte.Write((byte) a, testArr, offset, bits);
-						Assert.AreEqual(a & mask, FastBit.Byte.Read(testArr, offset, bits), "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
+						Assert.AreEqual(a & mask, FastBit.Byte.Read(testArr, offset, bits), "\nvalue=" + a + "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
 					}
 				}
 
@@ -39,7 +39,7 @@ namespace BBufferTests {
 						ResetArray(testArr, 0xff);
 						FastBit.Byte.Write((byte) a, testArr, offset, bits);
 						ff.Write(testArr, offset - bits, bits); // write behind, trying to override
-						Assert.AreEqual(a & mask, FastBit.Byte.Read(testArr, offset, bits), "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
+						Assert.AreEqual(a & mask, FastBit.Byte.Read(testArr, offset, bits), "\nvalue=" + a + "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
 					}
 				}
 			}
@@ -61,7 +61,7 @@ namespace BBufferTests {
 						var mask = Mask(bits);
 						ResetArray(testArr, 0x00);
 						sb.Write(testArr, offset, bits);
-						Assert.AreEqual(a & mask, new FastBit.UShort().Read(testArr, offset, bits), "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
+						Assert.AreEqual(a & mask, new FastBit.UShort().Read(testArr, offset, bits), "\nvalue=" + a + "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
 					}
 				}
 
@@ -70,7 +70,7 @@ namespace BBufferTests {
 						var mask = Mask(bits);
 						ResetArray(testArr, 0xff);
 						sb.Write(testArr, offset, bits);
-						Assert.AreEqual(a & mask, new FastBit.UShort().Read(testArr, offset, bits), "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
+						Assert.AreEqual(a & mask, new FastBit.UShort().Read(testArr, offset, bits), "\nvalue=" + a + "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
 					}
 				}
 
@@ -80,7 +80,7 @@ namespace BBufferTests {
 						ResetArray(testArr, 0xff);
 						sb.Write(testArr, offset, bits);
 						ff.Write(testArr, offset - bits, bits); // write behind, trying to override
-						Assert.AreEqual(a & mask, new FastBit.UShort().Read(testArr, offset, bits), "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
+						Assert.AreEqual(a & mask, new FastBit.UShort().Read(testArr, offset, bits), "\nvalue=" + a + "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
 					}
 				}
 			}
@@ -103,7 +103,7 @@ namespace BBufferTests {
 						var mask = Mask(bits);
 						ResetArray(testArr, 0x00);
 						sb.Write(testArr, offset, bits);
-						Assert.AreEqual(a & mask, new FastBit.UInt().Read(testArr, offset, bits), "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
+						Assert.AreEqual(a & mask, new FastBit.UInt().Read(testArr, offset, bits), "\nvalue=" + a + "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
 					}
 				}
 
@@ -112,7 +112,7 @@ namespace BBufferTests {
 						var mask = Mask(bits);
 						ResetArray(testArr, 0xff);
 						sb.Write(testArr, offset, bits);
-						Assert.AreEqual(a & mask, new FastBit.UInt().Read(testArr, offset, bits), "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
+						Assert.AreEqual(a & mask, new FastBit.UInt().Read(testArr, offset, bits), "\nvalue=" + a + "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
 					}
 				}
 
@@ -122,7 +122,7 @@ namespace BBufferTests {
 						ResetArray(testArr, 0xff);
 						sb.Write(testArr, offset, bits);
 						ff.Write(testArr, offset - bits, bits); // write behind, trying to override
-						Assert.AreEqual(a & mask, new FastBit.UInt().Read(testArr, offset, bits), "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
+						Assert.AreEqual(a & mask, new FastBit.UInt().Read(testArr, offset, bits), "\nvalue=" + a + "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
 					}
 				}
 			}
@@ -146,7 +146,7 @@ namespace BBufferTests {
 						var mask = Mask(bits);
 						ResetArray(testArr, 0x00);
 						sb.Write(testArr, offset, bits);
-						Assert.AreEqual(a & mask, new FastBit.ULong().Read(testArr, offset, bits), "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
+						Assert.AreEqual(a & mask, new FastBit.ULong().Read(testArr, offset, bits), "\nvalue=" + a + "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
 					}
 				}
 
@@ -155,7 +155,7 @@ namespace BBufferTests {
 						var mask = Mask(bits);
 						ResetArray(testArr, 0xff);
 						sb.Write(testArr, offset, bits);
-						Assert.AreEqual(a & mask, new FastBit.ULong().Read(testArr, offset, bits), "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
+						Assert.AreEqual(a & mask, new FastBit.ULong().Read(testArr, offset, bits), "\nvalue=" + a + "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
 					}
 				}
 
@@ -165,7 +165,7 @@ namespace BBufferTests {
 						ResetArray(testArr, 0xff);
 						sb.Write(testArr, offset, bits);
 						ff.Write(testArr, offset - bits, bits); // write behind, trying to override
-						Assert.AreEqual(a & mask, new FastBit.ULong().Read(testArr, offset, bits), "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
+						Assert.AreEqual(a & mask, new FastBit.ULong().Read(testArr, offset, bits), "\nvalue=" + a + "\noffset:<" + offset + ">.\nbits:<" + bits + ">.");
 					}
 				}
 			}

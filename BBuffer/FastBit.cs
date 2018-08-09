@@ -42,8 +42,9 @@ namespace BBuffer {
 					Write(buffer, bitOffset, bitCount, b0, b1, b2, b3, b4, b5, b6, b7);
 				}
 			}
-			private static void Write(byte[] buffer, int offset, int count, byte b0, byte b1, byte b2, byte b3, byte b4, byte b5, byte b6, byte b7) {
-				if (0 == (0x7 & offset)) {
+			private void Write(byte[] buffer, int offset, int count, byte b0, byte b1, byte b2, byte b3, byte b4, byte b5, byte b6, byte b7) {
+				int bitOffsetInByte = 0x7 & offset;
+				if (0 == bitOffsetInByte) {
 					if (count == 64) {
 						buffer[offset / 8] = b0;
 						buffer[offset / 8 + 1] = b1;
@@ -88,14 +89,14 @@ namespace BBuffer {
 					else Byte.Write(b0, buffer, offset, count);
 				}
 				else {
-					Byte.Write(b0, buffer, offset, count);
-					if (count > 8) Byte.Write(b1, buffer, offset + 8, count - 8);
-					if (count > 16) Byte.Write(b2, buffer, offset + 16, count - 16);
-					if (count > 24) Byte.Write(b3, buffer, offset + 24, count - 24);
-					if (count > 32) Byte.Write(b4, buffer, offset + 32, count - 32);
-					if (count > 40) Byte.Write(b5, buffer, offset + 40, count - 40);
-					if (count > 48) Byte.Write(b6, buffer, offset + 48, count - 48);
-					if (count > 56) Byte.Write(b7, buffer, offset + 56, count - 56);
+					if (count > 8) {
+						var bitsToAlign = 8 - bitOffsetInByte;
+						Byte.Write(b0, buffer, offset, bitsToAlign);
+						new ULong(value >> bitsToAlign).Write(buffer, offset + bitsToAlign, count - bitsToAlign);
+					}
+					else {
+						Byte.Write(b0, buffer, offset, count);
+					}
 				}
 			}
 
@@ -236,8 +237,9 @@ namespace BBuffer {
 					Write(buffer, bitOffset, bitCount, b0, b1, b2, b3);
 				}
 			}
-			private static void Write(byte[] buffer, int offset, int count, byte b0, byte b1, byte b2, byte b3) {
-				if (0 == (0x7 & offset)) {
+			private void Write(byte[] buffer, int offset, int count, byte b0, byte b1, byte b2, byte b3) {
+				int bitOffsetInByte = 0x7 & offset;
+				if (0 == bitOffsetInByte) {
 					if (count == 32) {
 						buffer[offset / 8] = b0;
 						buffer[offset / 8 + 1] = b1;
@@ -262,10 +264,14 @@ namespace BBuffer {
 					else Byte.Write(b0, buffer, offset, count);
 				}
 				else {
-					Byte.Write(b0, buffer, offset, count);
-					if (count > 8) Byte.Write(b1, buffer, offset + 8, count - 8);
-					if (count > 16) Byte.Write(b2, buffer, offset + 16, count - 16);
-					if (count > 24) Byte.Write(b3, buffer, offset + 24, count - 24);
+					if (count > 8) {
+						var bitsToAlign = 8 - bitOffsetInByte;
+						Byte.Write(b0, buffer, offset, bitsToAlign);
+						new UInt(value >> bitsToAlign).Write(buffer, offset + bitsToAlign, count - bitsToAlign);
+					}
+					else {
+						Byte.Write(b0, buffer, offset, count);
+					}
 				}
 			}
 
@@ -355,7 +361,7 @@ namespace BBuffer {
 					Write(buffer, bitOffset, bitCount, b0, b1);
 				}
 			}
-			private static void Write(byte[] buffer, int bitOffset, int bitCount, byte byte0, byte byte1) {
+			private void Write(byte[] buffer, int bitOffset, int bitCount, byte byte0, byte byte1) {
 				if (0 == (0x7 & bitOffset)) {
 					if (bitCount >= 8) buffer[bitOffset / 8] = byte0;
 					else Byte.Write(byte0, buffer, bitOffset, bitCount);
@@ -405,18 +411,24 @@ namespace BBuffer {
 
 		public static class Byte {
 			public static void Write(byte value, byte[] buffer, int bitOffset, int bitCount) {
-				if (bitCount <= 0) return;
+				if (bitCount > 8) bitCount = 8;
+				else if (bitCount <= 0) return;
 
 				int bitOffsetInByte = 0x7 & bitOffset;
 				if (0 == bitOffsetInByte) {
-					int mask = bitCount >= 8 ? 0xff : (1 << bitCount) - 1;
-					buffer[bitOffset / 8] = (byte) ((~mask & buffer[bitOffset / 8]) | (mask & value));
+					if (8 == bitCount) {
+						buffer[bitOffset / 8] = value;
+					}
+					else {
+						int mask = (1 << bitCount) - 1;
+						buffer[bitOffset / 8] = (byte) ((~mask & buffer[bitOffset / 8]) | (mask & value));
+					}
 				}
 				else {
-					int mask = (bitCount >= 8 ? 0xff : (1 << bitCount) - 1) << bitOffsetInByte;
+					int mask = (bitCount == 8 ? 0xff : (1 << bitCount) - 1) << bitOffsetInByte;
 					buffer[bitOffset / 8] = (byte) ((~mask & buffer[bitOffset / 8]) | (mask & (value << bitOffsetInByte)));
 
-					if (bitCount > (8 - bitOffsetInByte)) {
+					if (bitCount > 8 - bitOffsetInByte) {
 						int mask2 = mask >> 8;
 						buffer[bitOffset / 8 + 1] = (byte) ((~mask2 & buffer[bitOffset / 8 + 1]) | (mask2 & (value >> (8 - bitOffsetInByte))));
 					}

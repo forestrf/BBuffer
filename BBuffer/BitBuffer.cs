@@ -222,11 +222,7 @@ namespace BBuffer {
 
 		#region PutMethods
 		public void Put(byte value, int bitCount = sizeof(byte) * 8) {
-			if (simulateWrites) {
-				absPosition += bitCount;
-				return;
-			}
-			FastBit.Byte.Write(value, data, absPosition, bitCount);
+			PutAt(Position, value, bitCount);
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, byte value, int bitCount = sizeof(byte) * 8) {
@@ -235,10 +231,7 @@ namespace BBuffer {
 		}
 
 		public void Put(bool value) {
-			if (simulateWrites) {
-				absPosition += 1;
-				return;
-			}
+			PutAt(Position, value);
 			Put(value ? (byte) 1 : (byte) 0, 1);
 		}
 		public void PutAt(int offset, bool value) {
@@ -247,11 +240,7 @@ namespace BBuffer {
 		}
 
 		public void Put(short value, int bitCount = sizeof(short) * 8) {
-			if (simulateWrites) {
-				absPosition += bitCount;
-				return;
-			}
-			new FastBit.UShort((ushort) value).Write(data, absPosition, bitCount);
+			PutAt(Position, value, bitCount);
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, short value, int bitCount = sizeof(short) * 8) {
@@ -260,11 +249,7 @@ namespace BBuffer {
 		}
 
 		public void Put(ushort value, int bitCount = sizeof(ushort) * 8) {
-			if (simulateWrites) {
-				absPosition += bitCount;
-				return;
-			}
-			new FastBit.UShort(value).Write(data, absPosition, bitCount);
+			PutAt(Position, value, bitCount);
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, ushort value, int bitCount = sizeof(ushort) * 8) {
@@ -273,11 +258,7 @@ namespace BBuffer {
 		}
 
 		public void Put(int value, int bitCount = sizeof(int) * 8) {
-			if (simulateWrites) {
-				absPosition += bitCount;
-				return;
-			}
-			new FastBit.UInt((uint) value).Write(data, absPosition, bitCount);
+			PutAt(Position, value, bitCount);
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, int value, int bitCount = sizeof(int) * 8) {
@@ -286,11 +267,7 @@ namespace BBuffer {
 		}
 
 		public void Put(uint value, int bitCount = sizeof(uint) * 8) {
-			if (simulateWrites) {
-				absPosition += bitCount;
-				return;
-			}
-			new FastBit.UInt(value).Write(data, absPosition, bitCount);
+			PutAt(Position, value, bitCount);
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, uint value, int bitCount = sizeof(uint) * 8) {
@@ -299,11 +276,7 @@ namespace BBuffer {
 		}
 
 		public void Put(long value, int bitCount = sizeof(long) * 8) {
-			if (simulateWrites) {
-				absPosition += bitCount;
-				return;
-			}
-			new FastBit.ULong((ulong) value).Write(data, absPosition, bitCount);
+			PutAt(Position, value, bitCount);
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, long value, int bitCount = sizeof(long) * 8) {
@@ -312,11 +285,7 @@ namespace BBuffer {
 		}
 
 		public void Put(ulong value, int bitCount = sizeof(ulong) * 8) {
-			if (simulateWrites) {
-				absPosition += bitCount;
-				return;
-			}
-			new FastBit.ULong(value).Write(data, absPosition, bitCount);
+			PutAt(Position, value, bitCount);
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, ulong value, int bitCount = sizeof(ulong) * 8) {
@@ -325,10 +294,6 @@ namespace BBuffer {
 		}
 
 		public void Put(float value) {
-			if (simulateWrites) {
-				absPosition += sizeof(float) * 8;
-				return;
-			}
 			PutAt(Position, value);
 			absPosition += sizeof(float) * 8;
 		}
@@ -341,10 +306,6 @@ namespace BBuffer {
 		}
 
 		public void Put(double value) {
-			if (simulateWrites) {
-				absPosition += sizeof(double) * 8;
-				return;
-			}
 			PutAt(Position, value);
 			absPosition += sizeof(double) * 8;
 		}
