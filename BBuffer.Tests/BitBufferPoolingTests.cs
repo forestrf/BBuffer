@@ -15,8 +15,16 @@ namespace BBufferTests {
 				new Thread(() => {
 					try {
 						Random randomInitializer = new Random(index);
-						for (int j = 0; j < 50; j++) {
+						for (int j = 0; j < 1000; j++) {
 							ushort size = (ushort) randomInitializer.Next();
+							var b = BitBuffer.GetPooled(size);
+							Assert.IsTrue(b.IsValid());
+							b.Recycle();
+							Assert.IsFalse(b.IsValid());
+						}
+
+						for (int j = 0; j < 150; j++) {
+							ushort size = (byte) randomInitializer.Next();
 							var randomInit = randomInitializer.Next();
 
 							Random r = new Random(randomInit);
@@ -25,13 +33,13 @@ namespace BBufferTests {
 							var bRead = b;
 							var bWrite = b;
 
+							int start = r.Next();
 							for (int k = 0; k < b.data.Length / sizeof(int); k++) {
-								bWrite.Put(r.Next());
+								bWrite.Put(start + k);
 							}
 
-							r = new Random(randomInit);
 							for (int k = 0; k < b.data.Length / sizeof(int); k++) {
-								Assert.AreEqual(r.Next(), bRead.GetInt());
+								Assert.AreEqual(start + k, bRead.GetInt());
 							}
 							b.Recycle();
 							Assert.IsFalse(b.IsValid());
