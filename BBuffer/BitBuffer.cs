@@ -220,6 +220,16 @@ namespace BBuffer {
 			return null != data;
 		}
 
+		/// <summary>
+		/// Advance the position of the buffer to byte align it, unless it is already aligned.
+		/// Read/write operations are faster when the buffer is byte aligned.
+		/// This function does not always write the same number of bits by design, so if you need to write always the same ammount of bits independently of the current offset or Position of the buffer, you must not use this.
+		/// </summary>
+		public void ByteAlignPosition() {
+			int delta = 0x7 & (sizeof(byte) - 1 - (0x7 & absPosition));
+			absPosition += delta;
+		}
+
 		#region PutMethods
 		public void Put(byte value, int bitCount = sizeof(byte) * 8) {
 			PutAt(Position, value, bitCount);
