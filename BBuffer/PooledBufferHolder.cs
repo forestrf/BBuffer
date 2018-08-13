@@ -9,13 +9,14 @@ namespace BBuffer {
 	internal class PooledBufferHolder {
 		[ThreadStatic]
 		private static Stack<PooledBufferHolder>[] bufferPool;
+		private static readonly Stack<PooledBufferHolder>[] sharedBufferPool = CreateBufferPool();
 
 		private static Stack<PooledBufferHolder>[] CreateBufferPool(byte highestPowerOfTwo = 16) {
-			var bufferPool = new Stack<PooledBufferHolder>[highestPowerOfTwo + 1];
-			for (int i = 0; i < bufferPool.Length; i++) {
-				bufferPool[i] = new Stack<PooledBufferHolder>();
+			var pool = new Stack<PooledBufferHolder>[highestPowerOfTwo + 1];
+			for (int i = 0; i < pool.Length; i++) {
+				pool[i] = new Stack<PooledBufferHolder>();
 			}
-			return bufferPool;
+			return pool;
 		}
 
 		public byte[] buffer;
@@ -28,6 +29,7 @@ namespace BBuffer {
 		/// </summary>
 		public int lifeCounter;
 		private bool isPooled;
+		private bool isGlobalPool;
 
 		public PooledBufferHolder(byte[] buffer, byte byteCountPowerOf2) {
 			this.buffer = buffer;
@@ -35,14 +37,25 @@ namespace BBuffer {
 			createdThread = Thread.CurrentThread;
 		}
 
-		public static PooledBufferHolder GetPooled(byte byteCountPowerOf2) {
-			if (null == bufferPool) bufferPool = CreateBufferPool();
+		public static PooledBufferHolder GetPooled(byte byteCountPowerOf2, bool useGlobalPool = false) {
+			if (useGlobalPool) {
+				lock (sharedBufferPool) {
+					return GetPooledInternal(byteCountPowerOf2, useGlobalPool, sharedBufferPool);
+				}
+			}
+			else {
+				if (null == bufferPool) bufferPool = CreateBufferPool();
+				return GetPooledInternal(byteCountPowerOf2, useGlobalPool, bufferPool);
+			}
+		}
 
-			for (int i = byteCountPowerOf2; i < bufferPool.Length; i++) {
-				var stack = bufferPool[byteCountPowerOf2];
+		private static PooledBufferHolder GetPooledInternal(byte byteCountPowerOf2, bool isGlobalPool, Stack<PooledBufferHolder>[] bufferPoolInternal) {
+			for (int i = byteCountPowerOf2; i < bufferPoolInternal.Length; i++) {
+				var stack = bufferPoolInternal[byteCountPowerOf2];
 				if (stack.Count > 0) {
 					var obj = stack.Pop();
 					obj.isPooled = false;
+					obj.isGlobalPool = isGlobalPool;
 					return obj;
 				}
 			}
@@ -51,11 +64,22 @@ namespace BBuffer {
 
 		// TO DO: If too many pooled buffers, use this method remove some of them.
 		public void Recycle() {
-			if (!isPooled && Thread.CurrentThread == createdThread) {
-				lifeCounter++;
-				isPooled = true;
-				if (byteCountPowerOf2 < bufferPool.Length) {
-					bufferPool[byteCountPowerOf2].Push(this);
+			if (!isPooled) {
+				if (isGlobalPool) {
+					lifeCounter++;
+					isPooled = true;
+					if (byteCountPowerOf2 < bufferPool.Length) {
+						lock (sharedBufferPool) {
+							sharedBufferPool[byteCountPowerOf2].Push(this);
+						}
+					}
+				}
+				else if (Thread.CurrentThread == createdThread) {
+					lifeCounter++;
+					isPooled = true;
+					if (byteCountPowerOf2 < bufferPool.Length) {
+						bufferPool[byteCountPowerOf2].Push(this);
+					}
 				}
 			}
 		}

@@ -32,9 +32,10 @@ namespace BBuffer {
 		/// Get a buffer from the pool. It should be recycled later calling at <see cref="Recycle"/>
 		/// </summary>
 		/// <param name="byteCountPowerOf2">minimum byte count = 1 << this</param>
-		public static BitBuffer GetPooled(ushort size) {
+		/// <param name="useGlobalPool">Use a pool unique for each thread (false) or a shared pool between threads (true)</param>
+		public static BitBuffer GetPooled(ushort size, bool useGlobalPool = false) {
 			byte byteCountPowerOf2 = Log2BitPosition(size);
-			var obj = PooledBufferHolder.GetPooled(byteCountPowerOf2);
+			var obj = PooledBufferHolder.GetPooled(byteCountPowerOf2, useGlobalPool);
 			if (null == obj) {
 				obj = new PooledBufferHolder(new byte[1 << byteCountPowerOf2], byteCountPowerOf2);
 			}

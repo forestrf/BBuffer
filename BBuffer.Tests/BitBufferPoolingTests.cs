@@ -7,7 +7,16 @@ namespace BBufferTests {
 	[TestFixture]
 	public class BitBufferPoolingTests {
 		[Test]
-		public void TestRecyclingThreadSafety() {
+		public void TestRecyclingThreadSafety_LocalPool() {
+			TestRecyclingThreadSafetyInternal(false);
+		}
+
+		[Test]
+		public void TestRecyclingThreadSafety_GobalPool() {
+			TestRecyclingThreadSafetyInternal(true);
+		}
+
+		private void TestRecyclingThreadSafetyInternal(bool useGlobalPool) {
 			ManualResetEvent[] mres = new ManualResetEvent[Environment.ProcessorCount * 4];
 			for (int i = 0; i < mres.Length; i++) {
 				mres[i] = new ManualResetEvent(false);
@@ -17,7 +26,7 @@ namespace BBufferTests {
 						Random randomInitializer = new Random(index);
 						for (int j = 0; j < 1000; j++) {
 							ushort size = (ushort) randomInitializer.Next();
-							var b = BitBuffer.GetPooled(size);
+							var b = BitBuffer.GetPooled(size, useGlobalPool);
 							Assert.IsTrue(b.IsValid());
 							b.Recycle();
 							Assert.IsFalse(b.IsValid());
@@ -28,7 +37,7 @@ namespace BBufferTests {
 							var randomInit = randomInitializer.Next();
 
 							Random r = new Random(randomInit);
-							var b = BitBuffer.GetPooled(size);
+							var b = BitBuffer.GetPooled(size, useGlobalPool);
 							Assert.IsTrue(b.IsValid());
 							var bRead = b;
 							var bWrite = b;
