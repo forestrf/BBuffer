@@ -37,7 +37,7 @@ namespace BBuffer {
 			byte byteCountPowerOf2 = Log2BitPosition(size);
 			var obj = PooledBufferHolder.GetPooled(byteCountPowerOf2, useGlobalPool);
 			if (null == obj) {
-				obj = new PooledBufferHolder(new byte[1 << byteCountPowerOf2], byteCountPowerOf2);
+				obj = new PooledBufferHolder(new byte[1 << byteCountPowerOf2], byteCountPowerOf2, useGlobalPool);
 			}
 			return new BitBuffer(obj, size);
 		}
