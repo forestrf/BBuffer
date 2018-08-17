@@ -312,17 +312,29 @@ namespace BBufferTests {
 				simulateWrites = true
 			};
 			b.Put(new BitBuffer(new byte[] { 0xff, 0xff, 0xff }, 0, 3));
+			Assert.AreEqual(3, b.Position);
 			b.Put(true);
+			Assert.AreEqual(3 + 1, b.Position);
 			b.Put(new byte[] { 0xff, 0xff, 0xff });
+			Assert.AreEqual(3 + 1 + 24, b.Position);
 			b.Put(1d);
+			Assert.AreEqual(3 + 1 + 24 + 64, b.Position);
 			b.Put(1f);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32, b.Position);
 			b.Put((byte) 1);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8, b.Position);
 			b.Put(1);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32, b.Position);
 			b.Put(1L);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32 + 64, b.Position);
 			b.Put((short) 1);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32 + 64 + 16, b.Position);
 			b.Put(1u);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32 + 64 + 16 + 32, b.Position);
 			b.Put(1uL);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32 + 64 + 16 + 32 + 64, b.Position);
 			b.Put((ushort) 1);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32 + 64 + 16 + 32 + 64 + 16, b.Position);
 			b.Put(new byte[] { 0xff, 0xff, 0xff }, 0, 3 * 8);
 			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32 + 64 + 16 + 32 + 64 + 16 + 24, b.Position);
 

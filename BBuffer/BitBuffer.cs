@@ -51,8 +51,9 @@ namespace BBuffer {
 		public BitBuffer CloneUsingPool() {
 			var b = GetPooled((ushort) (Math.Min(Length + 8, ushort.MaxValue)));
 			b.absOffset = b.absPosition = absPosition & 0x7;
+			b.Length = Length;
 			b.Put(this);
-			return b.FromStartToPosition();
+			return b;
 		}
 
 		/// <summary>
@@ -137,12 +138,13 @@ namespace BBuffer {
 			absOffset = offset;
 		}
 
-		public void SkipBytes(int numberOfBytes) {
-			SkipBits(8 * numberOfBytes);
+		public void SkipBytes(int byteCount) {
+			SkipBits(8 * byteCount);
 		}
 
-		public void SkipBits(int numberOfBits) {
-			absPosition += numberOfBits;
+		public void SkipBits(int bitCount) {
+			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absPosition, bitCount));
+			absPosition += bitCount;
 		}
 
 		/// <summary>Relative to <see cref="absOffset"/>. In bits</summary>
@@ -154,10 +156,7 @@ namespace BBuffer {
 		/// <summary>Relative to <see cref="absOffset"/>. In bits</summary>
 		public int Length {
 			get { return absLength - absOffset; }
-			set {
-				absLength = value + absOffset;
-				if (absPosition > absLength) absPosition = absLength;
-			}
+			set { absLength = value + absOffset; }
 		}
 
 		/// <summary>Relative to <see cref="absOffset"/>. In bytes</summary>
@@ -174,18 +173,6 @@ namespace BBuffer {
 			return absLength - absPosition;
 		}
 
-		public BitBuffer slice() {
-			BitBuffer b = new BitBuffer(data);
-			b.absOffset = b.absPosition = absPosition;
-			b.absLength = absLength;
-			return b;
-		}
-		public BitBuffer flip() {
-			absLength = absPosition;
-			absPosition = absOffset;
-			return this;
-		}
-
 		public BitBuffer FromStartToPosition() {
 			BitBuffer b = new BitBuffer(data);
 			b.absOffset = b.absPosition = absOffset;
@@ -200,21 +187,18 @@ namespace BBuffer {
 			return b;
 		}
 
-		public void Rewind() {
-			absPosition = 0;
-		}
-		public void Rewind(int bits) {
-			absPosition -= bits;
-		}
-
 		public byte[] ToArray() {
 			byte[] copy = new byte[(int) Math.Ceiling(Length / 8f)];
-			GetBits(copy, 0, Length);
+			GetBitsAt(0, copy, 0, Length);
 			return copy;
 		}
 
 		public bool BufferEquals(BitBuffer other) {
 			if (Length != other.Length)
+				return false;
+			if (null == data && null == other.data)
+				return true;
+			if (null == data ^ null == other.data)
 				return false;
 			for (int i = 0; i < Length / 8; i++)
 				if (GetByteAt(i * 8) != other.GetByteAt(i * 8))
@@ -234,8 +218,11 @@ namespace BBuffer {
 		/// This function does not always write the same number of bits by design, so if you need to write always the same ammount of bits independently of the current offset or Position of the buffer, you must not use this.
 		/// </summary>
 		public void ByteAlignPosition() {
-			int delta = 0x7 & (sizeof(byte) - 1 - (0x7 & absPosition));
-			absPosition += delta;
+			int bitCount = 0x7 & (sizeof(byte) - 1 - (0x7 & absPosition));
+
+			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absPosition, bitCount));
+
+			absPosition += bitCount;
 		}
 
 		#region PutMethods
@@ -244,16 +231,17 @@ namespace BBuffer {
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, byte value, int bitCount = sizeof(byte) * 8) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absOffset + offset, bitCount));
+
 			if (simulateWrites) return;
 			FastBit.Byte.Write(value, data, absOffset + offset, bitCount);
 		}
 
 		public void Put(bool value) {
 			PutAt(Position, value);
-			Put(value ? (byte) 1 : (byte) 0, 1);
+			absPosition += 1;
 		}
 		public void PutAt(int offset, bool value) {
-			if (simulateWrites) return;
 			PutAt(offset, value ? (byte) 1 : (byte) 0, 1);
 		}
 
@@ -262,6 +250,8 @@ namespace BBuffer {
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, short value, int bitCount = sizeof(short) * 8) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absOffset + offset, bitCount));
+
 			if (simulateWrites) return;
 			new FastBit.UShort((ushort) value).Write(data, absOffset + offset, bitCount);
 		}
@@ -271,6 +261,8 @@ namespace BBuffer {
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, ushort value, int bitCount = sizeof(ushort) * 8) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absOffset + offset, bitCount));
+
 			if (simulateWrites) return;
 			new FastBit.UShort(value).Write(data, absOffset + offset, bitCount);
 		}
@@ -280,6 +272,8 @@ namespace BBuffer {
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, int value, int bitCount = sizeof(int) * 8) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absOffset + offset, bitCount));
+
 			if (simulateWrites) return;
 			new FastBit.UInt((uint) value).Write(data, absOffset + offset, bitCount);
 		}
@@ -289,6 +283,8 @@ namespace BBuffer {
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, uint value, int bitCount = sizeof(uint) * 8) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absOffset + offset, bitCount));
+
 			if (simulateWrites) return;
 			new FastBit.UInt(value).Write(data, absOffset + offset, bitCount);
 		}
@@ -298,6 +294,8 @@ namespace BBuffer {
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, long value, int bitCount = sizeof(long) * 8) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absOffset + offset, bitCount));
+
 			if (simulateWrites) return;
 			new FastBit.ULong((ulong) value).Write(data, absOffset + offset, bitCount);
 		}
@@ -307,6 +305,8 @@ namespace BBuffer {
 			absPosition += bitCount;
 		}
 		public void PutAt(int offset, ulong value, int bitCount = sizeof(ulong) * 8) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absOffset + offset, bitCount));
+
 			if (simulateWrites) return;
 			new FastBit.ULong(value).Write(data, absOffset + offset, bitCount);
 		}
@@ -316,8 +316,10 @@ namespace BBuffer {
 			absPosition += sizeof(float) * 8;
 		}
 		public void PutAt(int offset, float value) {
-			if (simulateWrites) return;
 			const int bitCount = sizeof(float) * 8;
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absOffset + offset, bitCount));
+
+			if (simulateWrites) return;
 			if (!BitConverter.IsLittleEndian) value = new FastByte.Float(value).GetReversed();
 			var f = new FastByte.Float(value);
 			new FastBit.UInt(f.b0, f.b1, f.b2, f.b3).Write(data, absOffset + offset, bitCount);
@@ -328,8 +330,10 @@ namespace BBuffer {
 			absPosition += sizeof(double) * 8;
 		}
 		public void PutAt(int offset, double value) {
-			if (simulateWrites) return;
 			const int bitCount = sizeof(double) * 8;
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absOffset + offset, bitCount));
+
+			if (simulateWrites) return;
 			if (!BitConverter.IsLittleEndian) value = new FastByte.Double(value).GetReversed();
 			var f = new FastByte.Double(value);
 			new FastBit.ULong(f.b0, f.b1, f.b2, f.b3, f.b4, f.b5, f.b6, f.b7).Write(data, absOffset + offset, bitCount);
@@ -470,13 +474,13 @@ namespace BBuffer {
 			Put(v, 0, v.Length * 8);
 		}
 		public void Put(byte[] src, int srcOffset, int length) {
-			if (simulateWrites) {
-				absPosition += length;
-				return;
-			}
 			Put(new BitBuffer(src, srcOffset, length));
 		}
 		public void PutAt(int offset, BitBuffer src) {
+			if (absOffset + offset + src.Length > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absOffset + offset, src.Length));
+
+			if (simulateWrites) return;
+
 			int srcByteAlignment = 0x7 & src.absOffset;
 			int dstByteAlignment = 0x7 & (absOffset + offset);
 
@@ -512,16 +516,21 @@ namespace BBuffer {
 			}
 		}
 		public void Put(BitBuffer bb) {
-			if (simulateWrites) {
-				absPosition += bb.Length;
-				return;
-			}
 			PutAt(Position, bb);
 			absPosition += bb.Length;
 		}
 		public void Put(string str) {
 			int bytesNeeded = Encoding.UTF8.GetByteCount(str);
+			int bitCount = bytesNeeded * 8;
 			PutVariableLength((uint) (ushort) bytesNeeded);
+
+			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absPosition, bitCount));
+
+			if (simulateWrites) {
+				absPosition += bitCount;
+				return;
+			}
+
 			byte[] bytes = Encoding.UTF8.GetBytes(str);
 			Put(bytes);
 		}
@@ -529,11 +538,15 @@ namespace BBuffer {
 
 		#region GetMethods
 		public byte GetByte(int bitCount = sizeof(byte) * 8) {
+			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absPosition, bitCount));
+
 			byte res = FastBit.Byte.Read(data, absPosition, bitCount);
 			absPosition += bitCount;
 			return res;
 		}
 		public byte GetByteAt(int offset, int bitCount = sizeof(byte) * 8) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absOffset + offset, bitCount));
+
 			return FastBit.Byte.Read(data, absOffset + offset, bitCount);
 		}
 
@@ -545,56 +558,80 @@ namespace BBuffer {
 		}
 
 		public short GetShort(int bitCount = sizeof(short) * 8) {
+			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absPosition, bitCount));
+
 			short result = (short) new FastBit.UShort().Read(data, absPosition, bitCount);
 			absPosition += bitCount;
 			return result;
 		}
 		public short GetShortAt(int offset, int bitCount = sizeof(short) * 8) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absOffset + offset, bitCount));
+
 			return (short) new FastBit.UShort().Read(data, absOffset + offset, bitCount);
 		}
 
 		public ushort GetUShort(int bitCount = sizeof(ushort) * 8) {
+			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absPosition, bitCount));
+
 			ushort v = new FastBit.UShort().Read(data, absPosition, bitCount);
 			absPosition += bitCount;
 			return v;
 		}
 		public ushort GetUShortAt(int offset, int bitCount = sizeof(ushort) * 8) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absOffset + offset, bitCount));
+
 			return new FastBit.UShort().Read(data, absOffset + offset, bitCount);
 		}
 
 		public int GetInt(int bitCount = sizeof(int) * 8) {
+			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absPosition, bitCount));
+
 			int result = (int) new FastBit.UInt().Read(data, absPosition, bitCount);
 			absPosition += bitCount;
 			return result;
 		}
 		public int GetIntAt(int offset, int bitCount = sizeof(int) * 8) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absOffset + offset, bitCount));
+
 			return (int) new FastBit.UInt().Read(data, absOffset + offset, bitCount);
 		}
 
 		public uint GetUInt(int bitCount = sizeof(uint) * 8) {
+			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absPosition, bitCount));
+
 			uint result = new FastBit.UInt().Read(data, absPosition, bitCount);
 			absPosition += bitCount;
 			return result;
 		}
 		public uint GetUIntAt(int offset, int bitCount = sizeof(uint) * 8) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absOffset + offset, bitCount));
+
 			return new FastBit.UInt().Read(data, absOffset + offset, bitCount);
 		}
 
 		public long GetLong(int bitCount = sizeof(long) * 8) {
+			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absPosition, bitCount));
+
 			long result = (long) new FastBit.ULong().Read(data, absPosition, bitCount);
 			absPosition += bitCount;
 			return result;
 		}
 		public long GetLongAt(int offset, int bitCount = sizeof(long) * 8) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absOffset + offset, bitCount));
+
 			return (long) new FastBit.ULong().Read(data, absOffset + offset, bitCount);
 		}
 
 		public ulong GetULong(int bitCount = sizeof(long) * 8) {
+			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absPosition, bitCount));
+
 			ulong result = new FastBit.ULong().Read(data, absPosition, bitCount);
 			absPosition += bitCount;
 			return result;
 		}
 		public ulong GetULongAt(int offset, int bitCount = sizeof(long) * 8) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absOffset + offset, bitCount));
+
 			return new FastBit.ULong().Read(data, absOffset + offset, bitCount);
 		}
 
@@ -605,6 +642,8 @@ namespace BBuffer {
 		}
 		public float GetFloatAt(int offset) {
 			const int bitCount = sizeof(float) * 8;
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absOffset + offset, bitCount));
+
 			var u = new FastBit.UInt();
 			u.Read(data, absOffset + offset, bitCount);
 			var f = new FastByte.Float(u.b0, u.b1, u.b2, u.b3);
@@ -618,6 +657,8 @@ namespace BBuffer {
 		}
 		public double GetDoubleAt(int offset) {
 			const int bitCount = sizeof(double) * 8;
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absOffset + offset, bitCount));
+
 			var u = new FastBit.ULong();
 			u.Read(data, absOffset + offset, bitCount);
 			var f = new FastByte.Double(u.b0, u.b1, u.b2, u.b3, u.b4, u.b5, u.b6, u.b7);
@@ -626,21 +667,27 @@ namespace BBuffer {
 
 		/// <param name="dstOffset">in bits</param>
 		/// <param name="destination">target of the copy, a non null array with enough length</param>
-		/// <param name="lenght">in bits</param>
-		public void GetBits(byte[] destination, int dstOffset, int lenght) {
-			var toPut = new BitBuffer(data, absOffset, Math.Min(lenght, Length));
+		/// <param name="bitCount">in bits</param>
+		public void GetBitsAt(int offset, byte[] destination, int dstOffset, int bitCount) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absOffset + offset, bitCount));
+
+			var toPut = new BitBuffer(data, absOffset + offset, bitCount);
 			new BitBuffer(destination, dstOffset).Put(toPut);
 		}
 
-		/// <param name="length">in bits</param>
-		public BitBuffer GetBits(int length) {
-			BitBuffer b = new BitBuffer(data, absPosition, length);
-			absPosition += length;
+		/// <param name="bitCount">in bits</param>
+		public BitBuffer GetBits(int bitCount) {
+			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absPosition, bitCount));
+
+			BitBuffer b = new BitBuffer(data, absPosition, bitCount);
+			absPosition += bitCount;
 			return b;
 		}
 
-		public BitBuffer GetBitsAt(int offset, int length) {
-			return new BitBuffer(data, absOffset + offset, length);
+		public BitBuffer GetBitsAt(int offset, int bitCount) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absOffset + offset, bitCount));
+
+			return new BitBuffer(data, absOffset + offset, bitCount);
 		}
 
 		public int GetIntVariableLength() {
@@ -729,15 +776,19 @@ namespace BBuffer {
 		}
 
 
-		public float GetRangedFloat(float min, float max, int numberOfBits) {
-			float value = GetRangedFloatAt(Position, min, max, numberOfBits);
-			absPosition += numberOfBits;
+		public float GetRangedFloat(float min, float max, int bitCount) {
+			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absPosition, bitCount));
+
+			float value = GetRangedFloatAt(Position, min, max, bitCount);
+			absPosition += bitCount;
 			return value;
 		}
-		public float GetRangedFloatAt(int offset, float min, float max, int numberOfBits) {
-			if (0 == numberOfBits) return min;
-			uint maxVal = uint.MaxValue >> (32 - numberOfBits);
-			uint encodedVal = GetUIntAt(offset, numberOfBits);
+		public float GetRangedFloatAt(int offset, float min, float max, int bitCount) {
+			if (absOffset + offset + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(false, absOffset + offset, bitCount));
+
+			if (0 == bitCount) return min;
+			uint maxVal = uint.MaxValue >> (32 - bitCount);
+			uint encodedVal = GetUIntAt(offset, bitCount);
 			float unit = encodedVal / (float) maxVal;
 			return min + unit * (max - min);
 		}
@@ -755,12 +806,12 @@ namespace BBuffer {
 
 		public long GetRangedLong(long min, long max) {
 			int numBits = BitsOccupiedByRange(min, max);
-			long rvalue = (long) GetUInt(numBits);
+			long rvalue = (long) GetULong(numBits);
 			return min + rvalue;
 		}
 		public long GetRangedLongAt(int offset, long min, long max) {
 			int numBits = BitsOccupiedByRange(min, max);
-			long rvalue = (long) GetUIntAt(offset, numBits);
+			long rvalue = (long) GetULongAt(offset, numBits);
 			return min + rvalue;
 		}
 		public string GetString() {
@@ -968,6 +1019,14 @@ namespace BBuffer {
 			else {
 				s.Append("(NO DATA)");
 			}
+			return s.ToString();
+		}
+
+		private string MsgIOORE(bool writting, int absOffset, int bitCount) {
+			StringBuilder s = new StringBuilder("Trying to ");
+			s.Append(writting ? "Write " : "Read ");
+			s.Append(bitCount.ToString()).Append(" bits at ").Append((absOffset - this.absOffset).ToString()).Append(", ");
+			s.Append(ToString());
 			return s.ToString();
 		}
 	}
