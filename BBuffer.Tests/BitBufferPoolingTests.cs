@@ -92,7 +92,7 @@ namespace BBufferTests {
 				Assert.AreEqual(reference, test, "Number=" + n);
 			}
 		}
-		
+
 		private int GetCeilPowerOfTwo(uint number) {
 			for (int i = 0; i < 32; i++) {
 				if (number <= 1 << i) {

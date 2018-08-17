@@ -305,7 +305,8 @@ namespace BBuffer {
 				else {
 					if (count > 8) {
 						var bitsToAlign = 8 - bitOffsetInByte;
-						value = Byte.Read(buffer, offset, bitsToAlign) + (new UInt().Read(buffer, offset + bitsToAlign, count - bitsToAlign) << bitsToAlign);					}
+						value = Byte.Read(buffer, offset, bitsToAlign) + (new UInt().Read(buffer, offset + bitsToAlign, count - bitsToAlign) << bitsToAlign);
+					}
 					else {
 						b0 = Byte.Read(buffer, offset, count);
 						b1 = b2 = b3 = 0;
