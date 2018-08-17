@@ -52,7 +52,7 @@ namespace BBuffer {
 			var b = GetPooled((ushort) (Math.Min(Length + 8, ushort.MaxValue)));
 			b.absOffset = b.absPosition = absPosition & 0x7;
 			b.Put(this);
-			return b.GetCropToCurrentPosition();
+			return b.FromStartToPosition();
 		}
 
 		/// <summary>
@@ -186,10 +186,17 @@ namespace BBuffer {
 			return this;
 		}
 
-		public BitBuffer GetCropToCurrentPosition() {
+		public BitBuffer FromStartToPosition() {
 			BitBuffer b = new BitBuffer(data);
 			b.absOffset = b.absPosition = absOffset;
 			b.absLength = absPosition;
+			return b;
+		}
+
+		public BitBuffer FromHereToEnd() {
+			BitBuffer b = new BitBuffer(data);
+			b.absOffset = b.absPosition = absPosition;
+			b.absLength = absLength;
 			return b;
 		}
 
