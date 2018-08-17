@@ -38,6 +38,8 @@ namespace BBufferTests {
 
 							Random r = new Random(randomInit);
 							var b = BitBuffer.GetPooled(size, useGlobalPool);
+							Assert.AreEqual(0, b.Position);
+							Assert.AreEqual(size, b.Length);
 							Assert.IsTrue(b.IsValid());
 							var bRead = b;
 							var bWrite = b;

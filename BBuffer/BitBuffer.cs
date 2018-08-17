@@ -53,7 +53,7 @@ namespace BBuffer {
 			b.absOffset = b.absPosition = absPosition & 0x7;
 			b.Length = Length;
 			b.Put(this);
-			return b;
+			return b.FromStartToPosition();
 		}
 
 		/// <summary>
