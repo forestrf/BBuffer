@@ -138,15 +138,6 @@ namespace BBuffer {
 			absOffset = offset;
 		}
 
-		public void SkipBytes(int byteCount) {
-			SkipBits(8 * byteCount);
-		}
-
-		public void SkipBits(int bitCount) {
-			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absPosition, bitCount));
-			absPosition += bitCount;
-		}
-
 		/// <summary>Relative to <see cref="absOffset"/>. In bits</summary>
 		public int Position {
 			get { return absPosition - absOffset; }

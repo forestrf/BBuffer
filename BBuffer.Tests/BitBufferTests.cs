@@ -36,12 +36,12 @@ namespace BBufferTests {
 					b.Put((byte) 0x70);
 					b.PutAt(1 * 8, (ushort) 0x6847);
 					b.Put(0x70427963);
-					b.SkipBytes(8);
+					b.Position += 64;
 					b.Put((ulong) 0x7a56576267513363);
 					b.Position = 8 * 8;
 					b.Put(3.67351315E+24f);
 					b.Put(1.01686312E+27f);
-					b.SkipBytes(8);
+					b.Position += 64;
 					b.Put(1.5152749180821361E-13d);
 
 					Assert.IsTrue(b.FromStartToPosition().BufferEquals(new BitBuffer(expectedMessage)), "off=" + off + ", len=" + len);
@@ -440,7 +440,7 @@ namespace BBufferTests {
 
 						var bWrite = dBitBuffer;
 						bWrite.Put(false);
-						bWrite.SkipBits(length - 2);
+						bWrite.Position += length - 2;
 						bWrite.Put(false);
 
 						var b = new BitBuffer(new byte[60], offset1);
