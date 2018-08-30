@@ -36,15 +36,15 @@ namespace BBufferTests {
 					b.Put((byte) 0x70);
 					b.PutAt(1 * 8, (ushort) 0x6847);
 					b.Put(0x70427963);
-					b.SkipBytes(8);
+					b.Position += 64;
 					b.Put((ulong) 0x7a56576267513363);
 					b.Position = 8 * 8;
 					b.Put(3.67351315E+24f);
 					b.Put(1.01686312E+27f);
-					b.SkipBytes(8);
+					b.Position += 64;
 					b.Put(1.5152749180821361E-13d);
 
-					Assert.IsTrue(b.GetCropToCurrentPosition().BufferEquals(new BitBuffer(expectedMessage)), "off=" + off + ", len=" + len);
+					Assert.IsTrue(b.FromStartToPosition().BufferEquals(new BitBuffer(expectedMessage)), "off=" + off + ", len=" + len);
 
 					Assert.AreEqual(off + expectedMessage.Length * 8, b.absPosition);
 					Assert.AreEqual(off, b.absOffset);
@@ -312,17 +312,29 @@ namespace BBufferTests {
 				simulateWrites = true
 			};
 			b.Put(new BitBuffer(new byte[] { 0xff, 0xff, 0xff }, 0, 3));
+			Assert.AreEqual(3, b.Position);
 			b.Put(true);
+			Assert.AreEqual(3 + 1, b.Position);
 			b.Put(new byte[] { 0xff, 0xff, 0xff });
+			Assert.AreEqual(3 + 1 + 24, b.Position);
 			b.Put(1d);
+			Assert.AreEqual(3 + 1 + 24 + 64, b.Position);
 			b.Put(1f);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32, b.Position);
 			b.Put((byte) 1);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8, b.Position);
 			b.Put(1);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32, b.Position);
 			b.Put(1L);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32 + 64, b.Position);
 			b.Put((short) 1);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32 + 64 + 16, b.Position);
 			b.Put(1u);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32 + 64 + 16 + 32, b.Position);
 			b.Put(1uL);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32 + 64 + 16 + 32 + 64, b.Position);
 			b.Put((ushort) 1);
+			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32 + 64 + 16 + 32 + 64 + 16, b.Position);
 			b.Put(new byte[] { 0xff, 0xff, 0xff }, 0, 3 * 8);
 			Assert.AreEqual(3 + 1 + 24 + 64 + 32 + 8 + 32 + 64 + 16 + 32 + 64 + 16 + 24, b.Position);
 
@@ -344,7 +356,7 @@ namespace BBufferTests {
 					for (int offset = 0; offset < 16; offset++) {
 						var c = new BitBuffer(new byte[(int) Math.Ceiling((offset + length) / 8f)], offset);
 						c.Put(b.GetBitsAt(i, length));
-						c = c.GetCropToCurrentPosition();
+						c = c.FromStartToPosition();
 						CollectionAssert.AreEqual(b.GetBitsAt(i, length).ToArray(), c.ToArray(), "i=" + i + ", length=" + length + ", offset=" + offset);
 						Assert.IsTrue(b.GetBitsAt(i, length).BufferEquals(c), "i=" + i + ", length=" + length + ", offset=" + offset);
 					}
@@ -369,7 +381,7 @@ namespace BBufferTests {
 							try {
 								var tmp = b.GetBitsAt(i, length);
 								b2.Put(tmp);
-								b2 = b2.GetCropToCurrentPosition();
+								b2 = b2.FromStartToPosition();
 								b2.PutAt(p, !b2.GetBoolAt(p));
 
 								CollectionAssert.AreNotEqual(b.GetBitsAt(i, length).ToArray(), b2.ToArray());
@@ -392,7 +404,7 @@ namespace BBufferTests {
 				r.NextBytes(data);
 				var b = new BitBuffer(new byte[60], offset);
 				b.Put(data);
-				var newArr = b.GetCropToCurrentPosition().ToArray();
+				var newArr = b.FromStartToPosition().ToArray();
 				CollectionAssert.AreEqual(data, newArr, "offset=" + offset);
 			}
 		}
@@ -408,7 +420,7 @@ namespace BBufferTests {
 					var b = new BitBuffer(new byte[60], offset1);
 					b.Put(dBitBuffer);
 					var oldArray = dBitBuffer.ToArray();
-					b = b.GetCropToCurrentPosition();
+					b = b.FromStartToPosition();
 					var newArr = b.ToArray();
 					CollectionAssert.AreEqual(oldArray, newArr, "offset1=" + offset1 + ", offset2 = " + offset2);
 					Assert.IsTrue(dBitBuffer.BufferEquals(b), "offset1=" + offset1 + ", offset2 = " + offset2);
@@ -428,14 +440,14 @@ namespace BBufferTests {
 
 						var bWrite = dBitBuffer;
 						bWrite.Put(false);
-						bWrite.SkipBits(length - 2);
+						bWrite.Position += length - 2;
 						bWrite.Put(false);
 
 						var b = new BitBuffer(new byte[60], offset1);
 						b.Put(dBitBuffer);
 
 						var oldArray = dBitBuffer.ToArray();
-						b = b.GetCropToCurrentPosition();
+						b = b.FromStartToPosition();
 						var newArr = b.ToArray();
 						CollectionAssert.AreEqual(oldArray, newArr, "offset1=" + offset1 + ", offset2 = " + offset2 + ", length=" + length);
 						Assert.IsTrue(dBitBuffer.BufferEquals(b), "offset1=" + offset1 + ", offset2 = " + offset2 + ", length=" + length);

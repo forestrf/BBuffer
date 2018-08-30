@@ -7,7 +7,16 @@ namespace BBufferTests {
 	[TestFixture]
 	public class BitBufferPoolingTests {
 		[Test]
-		public void TestRecyclingThreadSafety() {
+		public void TestRecyclingThreadSafety_LocalPool() {
+			TestRecyclingThreadSafetyInternal(false);
+		}
+
+		[Test]
+		public void TestRecyclingThreadSafety_GobalPool() {
+			TestRecyclingThreadSafetyInternal(true);
+		}
+
+		private void TestRecyclingThreadSafetyInternal(bool useGlobalPool) {
 			ManualResetEvent[] mres = new ManualResetEvent[Environment.ProcessorCount * 4];
 			for (int i = 0; i < mres.Length; i++) {
 				mres[i] = new ManualResetEvent(false);
@@ -15,30 +24,32 @@ namespace BBufferTests {
 				new Thread(() => {
 					try {
 						Random randomInitializer = new Random(index);
-						for (int j = 0; j < 1000; j++) {
+						for (int j = 0; j < 5000; j++) {
 							ushort size = (ushort) randomInitializer.Next();
-							var b = BitBuffer.GetPooled(size);
+							var b = BitBuffer.GetPooled(size, useGlobalPool);
 							Assert.IsTrue(b.IsValid());
 							b.Recycle();
 							Assert.IsFalse(b.IsValid());
 						}
 
-						for (int j = 0; j < 150; j++) {
+						for (int j = 0; j < 1000; j++) {
 							ushort size = (byte) randomInitializer.Next();
 							var randomInit = randomInitializer.Next();
 
 							Random r = new Random(randomInit);
-							var b = BitBuffer.GetPooled(size);
+							var b = BitBuffer.GetPooled(size, useGlobalPool);
+							Assert.AreEqual(0, b.Position);
+							Assert.AreEqual(size, b.Length);
 							Assert.IsTrue(b.IsValid());
 							var bRead = b;
 							var bWrite = b;
 
 							int start = r.Next();
-							for (int k = 0; k < b.data.Length / sizeof(int); k++) {
+							for (int k = 0; k < b.Length / (sizeof(int) * 8); k++) {
 								bWrite.Put(start + k);
 							}
 
-							for (int k = 0; k < b.data.Length / sizeof(int); k++) {
+							for (int k = 0; k < b.Length / (sizeof(int) * 8); k++) {
 								Assert.AreEqual(start + k, bRead.GetInt());
 							}
 							b.Recycle();
@@ -83,7 +94,7 @@ namespace BBufferTests {
 				Assert.AreEqual(reference, test, "Number=" + n);
 			}
 		}
-		
+
 		private int GetCeilPowerOfTwo(uint number) {
 			for (int i = 0; i < 32; i++) {
 				if (number <= 1 << i) {

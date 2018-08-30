@@ -184,7 +184,7 @@ namespace BBufferTests {
 
 				for (int k = 0; k < 20; k++) {
 					byte[] clon = new byte[256];
-					b.GetBits(clon, k, 700);
+					b.GetBitsAt(0, clon, k, 700);
 					BitBuffer b2 = new BitBuffer(clon);
 
 					r = new Random(0);
