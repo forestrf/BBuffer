@@ -46,6 +46,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Benchmark.cs" />
     <Compile Include="BitBufferPoolingTests.cs" />
     <Compile Include="BitBufferTests.cs" />
     <Compile Include="ByteBufferTest.cs" />
