@@ -513,7 +513,7 @@ namespace BBuffer {
 		public void Put(string str) {
 			int bytesNeeded = Encoding.UTF8.GetByteCount(str);
 			int bitCount = bytesNeeded * 8;
-			PutVariableLength((uint) (ushort) bytesNeeded);
+			PutVariableLength((uint) bytesNeeded);
 
 			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absPosition, bitCount));
 
@@ -806,7 +806,8 @@ namespace BBuffer {
 			return min + rvalue;
 		}
 		public string GetString() {
-			ushort length = (ushort) GetUIntVariableLength();
+			int length = (int) GetUIntVariableLength();
+			if (length < 0) throw new IndexOutOfRangeException("length of string is less than 0");
 			var array = GetBits(length * 8).ToArray();
 			return Encoding.UTF8.GetString(array, 0, length);
 		}
