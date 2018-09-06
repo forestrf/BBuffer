@@ -48,8 +48,8 @@ namespace BBuffer {
 		/// The returned buffer will be cropped
 		/// </summary>
 		/// <returns></returns>
-		public BitBuffer CloneUsingPool() {
-			var b = GetPooled((ushort) (Math.Min(Length + 8, ushort.MaxValue)));
+		public BitBuffer CloneUsingPool(bool useGlobalPool = false) {
+			var b = GetPooled((ushort) (Math.Min(Length + 8, ushort.MaxValue)), useGlobalPool);
 			b.absOffset = b.absPosition = absPosition & 0x7;
 			b.Length = Length;
 			b.Put(this);
@@ -165,14 +165,14 @@ namespace BBuffer {
 		}
 
 		public BitBuffer FromStartToPosition() {
-			BitBuffer b = new BitBuffer(data);
+			BitBuffer b = null != pooledBufferHolder ? new BitBuffer(pooledBufferHolder, data.Length) : new BitBuffer(data);
 			b.absOffset = b.absPosition = absOffset;
 			b.absLength = absPosition;
 			return b;
 		}
 
 		public BitBuffer FromHereToEnd() {
-			BitBuffer b = new BitBuffer(data);
+			BitBuffer b = null != pooledBufferHolder ? new BitBuffer(pooledBufferHolder, data.Length) : new BitBuffer(data);
 			b.absOffset = b.absPosition = absPosition;
 			b.absLength = absLength;
 			return b;
