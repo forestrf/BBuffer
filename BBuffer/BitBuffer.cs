@@ -33,13 +33,16 @@ namespace BBuffer {
 		/// </summary>
 		/// <param name="byteCountPowerOf2">minimum byte count = 1 << this</param>
 		/// <param name="useGlobalPool">Use a pool unique for each thread (false) or a shared pool between threads (true)</param>
-		public static BitBuffer GetPooled(ushort size, bool useGlobalPool = false) {
-			byte byteCountPowerOf2 = Log2BitPosition(size);
+		public static BitBuffer GetPooled(int bitCount, bool useGlobalPool = false) {
+			int byteCount = bitCount / 8;
+			if ((bitCount & 0x7) == 0) bitCount += 1;
+			if (byteCount > ushort.MaxValue) throw new IndexOutOfRangeException("bitCount is greater than max allowed value");
+			byte byteCountPowerOf2 = Log2BitPosition((ushort) byteCount);
 			var obj = PooledBufferHolder.GetPooled(byteCountPowerOf2, useGlobalPool);
 			if (null == obj) {
 				obj = new PooledBufferHolder(new byte[1 << byteCountPowerOf2], byteCountPowerOf2, useGlobalPool);
 			}
-			return new BitBuffer(obj, size);
+			return new BitBuffer(obj, bitCount);
 		}
 
 		/// <summary>

@@ -25,21 +25,21 @@ namespace BBufferTests {
 					try {
 						Random randomInitializer = new Random(index);
 						for (int j = 0; j < 5000; j++) {
-							ushort size = (ushort) randomInitializer.Next();
-							var b = BitBuffer.GetPooled(size, useGlobalPool);
+							ushort sizeInBits = (ushort) randomInitializer.Next();
+							var b = BitBuffer.GetPooled(sizeInBits, useGlobalPool);
 							Assert.IsTrue(b.IsValid());
 							b.Recycle();
 							Assert.IsFalse(b.IsValid());
 						}
 
 						for (int j = 0; j < 1000; j++) {
-							ushort size = (byte) randomInitializer.Next();
+							ushort sizeInBits = (byte) randomInitializer.Next();
 							var randomInit = randomInitializer.Next();
 
 							Random r = new Random(randomInit);
-							var b = BitBuffer.GetPooled(size, useGlobalPool);
+							var b = BitBuffer.GetPooled(sizeInBits, useGlobalPool);
 							Assert.AreEqual(0, b.Position);
-							Assert.AreEqual(size, b.Length);
+							Assert.AreEqual(sizeInBits, b.Length);
 							Assert.IsTrue(b.IsValid());
 							var bRead = b;
 							var bWrite = b;
