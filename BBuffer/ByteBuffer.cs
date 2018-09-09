@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace BBuffer {
 	/// <summary>
@@ -290,6 +291,16 @@ namespace BBuffer {
 			if (!data.HasData() || 0 == data.Length) return;
 			Put(data, 0, data.Length);
 		}
+
+		public void Put(string str) {
+			int bytesNeeded = Encoding.UTF8.GetByteCount(str);
+			PutVariableLength((uint) (ushort) bytesNeeded);
+
+			if (absPosition + bytesNeeded > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absPosition, bytesNeeded));
+			
+			byte[] bytes = Encoding.UTF8.GetBytes(str);
+			Put(bytes);
+		}
 		#endregion
 
 		#region GetMethods
@@ -468,6 +479,20 @@ namespace BBuffer {
 		public ByteBuffer GetBufferAt(int offset, ushort length) {
 			return new ByteBuffer(data, absOffset + offset, length);
 		}
+
+		public string GetString() {
+			ushort length = (ushort) GetUIntVariableLength();
+			var array = GetBuffer(length).ToArray();
+			return Encoding.UTF8.GetString(array, 0, length);
+		}
 		#endregion
+
+		private string MsgIOORE(bool writting, int absOffset, int bitCount) {
+			StringBuilder s = new StringBuilder("Trying to ");
+			s.Append(writting ? "Write " : "Read ");
+			s.Append(bitCount.ToString()).Append(" bits at ").Append((absOffset - this.absOffset).ToString()).Append(", ");
+			s.Append(ToString());
+			return s.ToString();
+		}
 	}
 }

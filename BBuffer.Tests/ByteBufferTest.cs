@@ -1,5 +1,8 @@
 ﻿using BBuffer;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace BBufferTests {
 	[TestFixture]
@@ -137,6 +140,48 @@ namespace BBufferTests {
 						Assert.AreEqual(0xffffffffff, b.GetLongVariableLength());
 						Assert.AreEqual(0xffffffffffff, b.GetLongVariableLength());
 					}
+				}
+			}
+		}
+
+		[Test]
+		public void StringTest() {
+			ByteBuffer b = new ByteBuffer(new byte[10000]);
+			List<string> strings = new List<string>() {
+				"ABCDEFGHIJKLMNOPQRSTUVWXYZ /0123456789" +
+				"abcdefghijklmnopqrstuvwxyz £©µÀÆÖÞßéöÿ" +
+				"–—‘“”„†•…‰™œŠŸž€ ΑΒΓΔΩαβγδω АБВГДабвгд" +
+				"∀∂∈ℝ∧∪≡∞ ↑↗↨↻⇣ ┐┼╔╘░►☺♀ ﬁ�⑀₂ἠḂӥẄɐː⍎אԱა",
+				"\r\n",
+				"",
+				"ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ"
+			};
+
+			Random r = new Random(0);
+			for (int i = 0; i < 128; i++) {
+				var s = new StringBuilder();
+				for (int j = 0; j < i; j++) s.Append((char) r.Next());
+				strings.Add(r.ToString());
+			}
+
+			List<int> endPositions = new List<int>();
+			var b2 = b;
+			foreach (var str in strings) {
+				b2.Put(str);
+				endPositions.Add(b2.Position);
+			}
+
+			for (int offset = 0; offset < 16; offset++) {
+				var bCopy = new ByteBuffer(b.data, offset);
+				var bWrite = bCopy;
+				var bRead = bCopy;
+
+				for (int i = 0; i < strings.Count; i++) {
+					bWrite.Put(strings[i]);
+					Assert.AreEqual(endPositions[i], bWrite.Position, "The string is writting a different ammount of bits depending on the offset of the array. This is wrong. offset=" + offset);
+				}
+				foreach (var str in strings) {
+					Assert.AreEqual(str, bRead.GetString());
 				}
 			}
 		}
