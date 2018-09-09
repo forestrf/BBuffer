@@ -7,6 +7,60 @@ namespace BBuffer {
 	/// Because it is an struct, you don't need to pool it but you may need to pass it to other methods using the ref keyword
 	/// </summary>
 	public struct ByteBuffer {
+		#region pooling
+		private readonly int lifeCounter;
+		private PooledBufferHolder pooledBufferHolder;
+
+		internal ByteBuffer(PooledBufferHolder pooledBuffeHolder, int length) : this() {
+			this.pooledBufferHolder = pooledBuffeHolder;
+			lifeCounter = pooledBuffeHolder.lifeCounter;
+			data = pooledBuffeHolder.buffer;
+			absLength = length;
+		}
+
+		/// <summary>
+		/// Check if this buffer can be used or, if it is a pooled buffer, if it has already been pooled.
+		/// In case it is not valid it MUST NOT be used.
+		/// </summary>
+		public bool IsValid() {
+			return null != data && (null == pooledBufferHolder || lifeCounter == pooledBufferHolder.lifeCounter);
+		}
+
+		/// <summary>
+		/// Get a buffer from the pool. It should be recycled later calling at <see cref="Recycle"/>
+		/// </summary>
+		/// <param name="byteCountPowerOf2">minimum byte count = 1 << this</param>
+		/// <param name="useGlobalPool">Use a pool unique for each thread (false) or a shared pool between threads (true)</param>
+		public static ByteBuffer GetPooled(int byteCount, bool useGlobalPool = false) {
+			var obj = PooledBufferHolder.GetPooledOrNew(byteCount, useGlobalPool);
+			return new ByteBuffer(obj, byteCount);
+		}
+
+		/// <summary>
+		/// Clone a buffer to a different byte array using the pool.
+		/// The length of this buffer with be used to decide the length of the needed byte array.
+		/// The returned buffer will be cropped
+		/// </summary>
+		/// <returns></returns>
+		public ByteBuffer CloneUsingPool(bool useGlobalPool = false) {
+			var b = GetPooled(Length, useGlobalPool);
+			b.Put(this);
+			b.Position = b.Position;
+			b.Length = Length;
+			return b;
+		}
+
+		/// <summary>
+		/// Recycle a booled a buffer.
+		/// This method will not fail even if it didn't need to be recycled.
+		/// </summary>
+		public void Recycle() {
+			if (null != pooledBufferHolder && lifeCounter == pooledBufferHolder.lifeCounter) {
+				pooledBufferHolder.Recycle();
+			}
+		}
+		#endregion
+
 		public static readonly byte[] ZeroLengthBuffer = new byte[0];
 
 		/// <summary>
@@ -38,7 +92,7 @@ namespace BBuffer {
 
 		public ByteBuffer(byte[] buffer, Endianness endianness = Endianness.Big) : this(buffer, 0, endianness) { }
 		public ByteBuffer(byte[] buffer, int offset, Endianness endianness = Endianness.Big) : this(buffer, offset, null != buffer ? buffer.Length - offset : 0, endianness) { }
-		public ByteBuffer(byte[] buffer, int offset, int length, Endianness endianness = Endianness.Big) {
+		public ByteBuffer(byte[] buffer, int offset, int length, Endianness endianness = Endianness.Big) : this() {
 			data = buffer;
 			absPosition = offset;
 			absLength = offset + length;
@@ -120,48 +174,36 @@ namespace BBuffer {
 		}
 
 		#region PutMethods
-		void UpdateDataSize(int position) {
-			if (position > Length) Length = position;
-		}
-
 		public void Put(byte value) {
 			data[absPosition] = value;
 			absPosition += sizeof(byte);
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, byte value) {
 			data[offset + absOffset] = value;
-			UpdateDataSize(offset + absOffset + sizeof(byte));
 		}
 
 		public void Put(short value) {
 			new FastByte.Short(value).Write(data, absPosition, endianness);
 			absPosition += sizeof(short);
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, short value) {
 			new FastByte.Short(value).Write(data, absOffset + offset, endianness);
-			UpdateDataSize(offset + absOffset + sizeof(short));
 		}
 
 		public void Put(ushort value) {
 			new FastByte.Short((short) value).Write(data, absPosition, endianness);
 			absPosition += sizeof(ushort);
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, ushort value) {
 			new FastByte.Short((short) value).Write(data, absOffset + offset, endianness);
-			UpdateDataSize(offset + absOffset + sizeof(ushort));
 		}
 
 		public void Put(int value) {
 			new FastByte.Int(value).Write(data, absPosition, endianness);
 			absPosition += sizeof(int);
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, int value) {
 			new FastByte.Int(value).Write(data, absOffset + offset, endianness);
-			UpdateDataSize(offset + absOffset + sizeof(int));
 		}
 		public void PutDeltaCompress(int value, int previousValue) {
 			PutVariableLength(value - previousValue);
@@ -173,21 +215,17 @@ namespace BBuffer {
 		public void Put(uint value) {
 			new FastByte.Int((int) value).Write(data, absPosition, endianness);
 			absPosition += sizeof(uint);
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, uint value) {
 			new FastByte.Int((int) value).Write(data, absOffset + offset, endianness);
-			UpdateDataSize(offset + absOffset + sizeof(uint));
 		}
 
 		public void Put(long value) {
 			new FastByte.Long(value).Write(data, absPosition, endianness);
 			absPosition += sizeof(long);
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, long value) {
 			new FastByte.Long(value).Write(data, absOffset + offset, endianness);
-			UpdateDataSize(offset + absOffset + sizeof(long));
 		}
 		public void PutDeltaCompress(long value, long previousValue) {
 			PutVariableLength(value - previousValue);
@@ -199,31 +237,25 @@ namespace BBuffer {
 		public void Put(ulong value) {
 			new FastByte.Long((long) value).Write(data, absPosition, endianness);
 			absPosition += sizeof(ulong);
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, ulong value) {
 			new FastByte.Long((long) value).Write(data, absOffset + offset, endianness);
-			UpdateDataSize(offset + absOffset + sizeof(ulong));
 		}
 
 		public void Put(float value) {
 			new FastByte.Float(value).Write(data, absPosition, endianness);
 			absPosition += sizeof(float);
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, float value) {
 			new FastByte.Float(value).Write(data, absOffset + offset, endianness);
-			UpdateDataSize(offset + absOffset + sizeof(float));
 		}
 
 		public void Put(double value) {
 			new FastByte.Double(value).Write(data, absPosition, endianness);
 			absPosition += sizeof(double);
-			UpdateDataSize(absPosition);
 		}
 		public void PutAt(int offset, double value) {
 			new FastByte.Double(value).Write(data, absOffset + offset, endianness);
-			UpdateDataSize(offset + absOffset + sizeof(double));
 		}
 
 
@@ -240,7 +272,6 @@ namespace BBuffer {
 
 		public void PutVariableLength(uint value) {
 			absPosition += PutVariableLengthAt(Position, value);
-			UpdateDataSize(absPosition);
 		}
 		public int PutVariableLengthAt(int offset, uint value) {
 			return PutVariableLengthAt(offset, (ulong) value);
@@ -259,7 +290,6 @@ namespace BBuffer {
 
 		public void PutVariableLength(ulong value) {
 			absPosition += PutVariableLengthAt(Position, value);
-			UpdateDataSize(absPosition);
 		}
 		public int PutVariableLengthAt(int offset, ulong value) {
 			int bytes = 0;
@@ -275,13 +305,11 @@ namespace BBuffer {
 		public void Put(byte[] src, int srcOffset, int length) {
 			Buffer.BlockCopy(src, srcOffset, data, absPosition, length);
 			absPosition += length;
-			UpdateDataSize(absPosition);
 		}
 		public void Put(ByteBuffer src, int srcOffset, int length) {
 			if (!src.HasData() || 0 == data.Length || 0 == length) return;
 			Buffer.BlockCopy(src.data, src.absOffset + srcOffset, data, absPosition, length);
 			absPosition += length;
-			UpdateDataSize(absPosition);
 		}
 		public void Put(byte[] data) {
 			Put(data, 0, data.Length);
@@ -399,7 +427,6 @@ namespace BBuffer {
 			int bytes;
 			uint value = GetUIntVariableLengthAt(Position, out bytes);
 			absPosition += bytes;
-			UpdateDataSize(absPosition);
 			return value;
 		}
 		public uint GetUIntVariableLengthAt(int offset, out int bytes) {
@@ -419,7 +446,6 @@ namespace BBuffer {
 			int bytes;
 			ulong value = GetULongVariableLengthAt(Position, out bytes);
 			absPosition += bytes;
-			UpdateDataSize(absPosition);
 			return value;
 		}
 		public ulong GetULongVariableLengthAt(int offset, out int bytes) {
