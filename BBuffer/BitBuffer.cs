@@ -33,13 +33,11 @@ namespace BBuffer {
 		/// </summary>
 		/// <param name="byteCountPowerOf2">minimum byte count = 1 << this</param>
 		/// <param name="useGlobalPool">Use a pool unique for each thread (false) or a shared pool between threads (true)</param>
-		public static BitBuffer GetPooled(ushort size, bool useGlobalPool = false) {
-			byte byteCountPowerOf2 = Log2BitPosition(size);
-			var obj = PooledBufferHolder.GetPooled(byteCountPowerOf2, useGlobalPool);
-			if (null == obj) {
-				obj = new PooledBufferHolder(new byte[1 << byteCountPowerOf2], byteCountPowerOf2, useGlobalPool);
-			}
-			return new BitBuffer(obj, size);
+		public static BitBuffer GetPooled(int bitCount, bool useGlobalPool = false) {
+			int byteCount = bitCount / 8;
+			if ((bitCount & 0x7) != 0) byteCount += 1;
+			var obj = PooledBufferHolder.GetPooledOrNew(byteCount, useGlobalPool);
+			return new BitBuffer(obj, bitCount);
 		}
 
 		/// <summary>
@@ -48,38 +46,13 @@ namespace BBuffer {
 		/// The returned buffer will be cropped
 		/// </summary>
 		/// <returns></returns>
-		public BitBuffer CloneUsingPool() {
-			var b = GetPooled((ushort) (Math.Min(Length + 8, ushort.MaxValue)));
-			b.absOffset = b.absPosition = absPosition & 0x7;
-			b.Length = Length;
+		public BitBuffer CloneUsingPool(bool useGlobalPool = false) {
+			var b = GetPooled(Length + (absOffset & 0x7), useGlobalPool);
+			b.absOffset = b.absPosition = absOffset & 0x7; // byte align for faster cloning
 			b.Put(this);
-			return b.FromStartToPosition();
-		}
-
-		/// <summary>
-		/// Answers the question:
-		/// What is the smallest value of x that 1 << x is equal or greather than <paramref name="number"/>.
-		/// Expected to be used when calling <see cref="GetPooled(byte)"/> giving this method the length of a buffer you want to clone.
-		/// </summary>
-		internal static byte Log2BitPosition(ushort number) {
-			// Unrolled loop for performance
-			if (number <= 1 << 0) return 0;
-			if (number <= 1 << 1) return 1;
-			if (number <= 1 << 2) return 2;
-			if (number <= 1 << 3) return 3;
-			if (number <= 1 << 4) return 4;
-			if (number <= 1 << 5) return 5;
-			if (number <= 1 << 6) return 6;
-			if (number <= 1 << 7) return 7;
-			if (number <= 1 << 8) return 8;
-			if (number <= 1 << 9) return 9;
-			if (number <= 1 << 10) return 10;
-			if (number <= 1 << 11) return 11;
-			if (number <= 1 << 12) return 12;
-			if (number <= 1 << 13) return 13;
-			if (number <= 1 << 14) return 14;
-			if (number <= 1 << 15) return 15;
-			return 16;
+			b.Position = Position;
+			b.Length = Length;
+			return b;
 		}
 
 		/// <summary>
@@ -165,14 +138,14 @@ namespace BBuffer {
 		}
 
 		public BitBuffer FromStartToPosition() {
-			BitBuffer b = new BitBuffer(data);
+			BitBuffer b = null != pooledBufferHolder ? new BitBuffer(pooledBufferHolder, data.Length) : new BitBuffer(data);
 			b.absOffset = b.absPosition = absOffset;
 			b.absLength = absPosition;
 			return b;
 		}
 
 		public BitBuffer FromHereToEnd() {
-			BitBuffer b = new BitBuffer(data);
+			BitBuffer b = null != pooledBufferHolder ? new BitBuffer(pooledBufferHolder, data.Length) : new BitBuffer(data);
 			b.absOffset = b.absPosition = absPosition;
 			b.absLength = absLength;
 			return b;
@@ -513,7 +486,7 @@ namespace BBuffer {
 		public void Put(string str) {
 			int bytesNeeded = Encoding.UTF8.GetByteCount(str);
 			int bitCount = bytesNeeded * 8;
-			PutVariableLength((uint) (ushort) bytesNeeded);
+			PutVariableLength((uint) bytesNeeded);
 
 			if (absPosition + bitCount > absLength) throw new IndexOutOfRangeException(MsgIOORE(true, absPosition, bitCount));
 
@@ -806,7 +779,8 @@ namespace BBuffer {
 			return min + rvalue;
 		}
 		public string GetString() {
-			ushort length = (ushort) GetUIntVariableLength();
+			int length = (int) GetUIntVariableLength();
+			if (length < 0) throw new IndexOutOfRangeException("length of string is less than 0");
 			var array = GetBits(length * 8).ToArray();
 			return Encoding.UTF8.GetString(array, 0, length);
 		}

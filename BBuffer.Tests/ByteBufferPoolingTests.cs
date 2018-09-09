@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace BBufferTests {
 	[TestFixture]
-	public class BitBufferPoolingTests {
+	public class ByteBufferPoolingTests {
 		[Test]
 		public void TestRecyclingThreadSafety_LocalPool() {
 			TestRecyclingThreadSafetyInternal(false);
@@ -26,7 +26,7 @@ namespace BBufferTests {
 						Random randomInitializer = new Random(index);
 						for (int j = 0; j < 5000; j++) {
 							ushort sizeInBits = (ushort) randomInitializer.Next();
-							var b = BitBuffer.GetPooled(sizeInBits, useGlobalPool);
+							var b = ByteBuffer.GetPooled(sizeInBits, useGlobalPool);
 							Assert.IsTrue(b.IsValid());
 							b.Recycle();
 							Assert.IsFalse(b.IsValid());
@@ -37,7 +37,7 @@ namespace BBufferTests {
 							var randomInit = randomInitializer.Next();
 
 							Random r = new Random(randomInit);
-							var b = BitBuffer.GetPooled(sizeInBits, useGlobalPool);
+							var b = ByteBuffer.GetPooled(sizeInBits, useGlobalPool);
 							Assert.AreEqual(0, b.Position);
 							Assert.AreEqual(sizeInBits, b.Length);
 							Assert.IsTrue(b.IsValid());
@@ -108,8 +108,8 @@ namespace BBufferTests {
 		public void CloneBufferWithPoolTest() {
 			Random r = new Random(0);
 			for (int offset = 0; offset < 16; offset++) {
-				var b = new BitBuffer(new byte[32], offset);
-				for (int k = 0; k < (b.data.Length - (int) Math.Ceiling(offset / 8f)) / sizeof(int); k++) {
+				var b = new ByteBuffer(new byte[32], offset);
+				for (int k = 0; k < (b.data.Length - offset) / sizeof(int); k++) {
 					b.Put(r.Next());
 				}
 				var clone = b.CloneUsingPool();
@@ -122,7 +122,7 @@ namespace BBufferTests {
 
 		[Test]
 		public void CloneBufferOffset() {
-			BitBuffer b = new BitBuffer(new byte[1 << 16]);
+			ByteBuffer b = new ByteBuffer(new byte[1 << 16]);
 			b.CloneUsingPool();
 			for (int i = 0; i < 16; i++) {
 				b.absOffset += 1;

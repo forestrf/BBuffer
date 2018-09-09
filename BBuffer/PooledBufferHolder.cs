@@ -38,16 +38,24 @@ namespace BBuffer {
 			isGlobalPool = useGlobalPool;
 		}
 
-		public static PooledBufferHolder GetPooled(byte byteCountPowerOf2, bool useGlobalPool = false) {
+		public static PooledBufferHolder GetPooledOrNew(int byteCount, bool useGlobalPool = false) {
+			if (byteCount > 1 << 16) throw new IndexOutOfRangeException("byteCount is greater than max allowed value");
+
+			byte byteCountPowerOf2 = Log2BitPosition(byteCount);
+			PooledBufferHolder obj;
 			if (useGlobalPool) {
 				lock (sharedBufferPool) {
-					return GetPooledInternal(byteCountPowerOf2, sharedBufferPool);
+					obj = GetPooledInternal(byteCountPowerOf2, sharedBufferPool);
 				}
 			}
 			else {
 				if (null == bufferPool) bufferPool = CreateBufferPool();
-				return GetPooledInternal(byteCountPowerOf2, bufferPool);
+				obj = GetPooledInternal(byteCountPowerOf2, bufferPool);
 			}
+			if (null == obj) {
+				obj = new PooledBufferHolder(new byte[1 << byteCountPowerOf2], byteCountPowerOf2, useGlobalPool);
+			}
+			return obj;
 		}
 
 		private static PooledBufferHolder GetPooledInternal(byte byteCountPowerOf2, Stack<PooledBufferHolder>[] bufferPoolInternal) {
@@ -82,6 +90,32 @@ namespace BBuffer {
 					}
 				}
 			}
+		}
+
+		/// <summary>
+		/// Answers the question:
+		/// What is the smallest value of x that 1 << x is equal or greather than <paramref name="number"/>.
+		/// Expected to be used when calling <see cref="GetPooled(byte)"/> giving this method the length of a buffer you want to clone.
+		/// </summary>
+		internal static byte Log2BitPosition(int number) {
+			// Unrolled loop for performance
+			if (number <= 1 << 0) return 0;
+			if (number <= 1 << 1) return 1;
+			if (number <= 1 << 2) return 2;
+			if (number <= 1 << 3) return 3;
+			if (number <= 1 << 4) return 4;
+			if (number <= 1 << 5) return 5;
+			if (number <= 1 << 6) return 6;
+			if (number <= 1 << 7) return 7;
+			if (number <= 1 << 8) return 8;
+			if (number <= 1 << 9) return 9;
+			if (number <= 1 << 10) return 10;
+			if (number <= 1 << 11) return 11;
+			if (number <= 1 << 12) return 12;
+			if (number <= 1 << 13) return 13;
+			if (number <= 1 << 14) return 14;
+			if (number <= 1 << 15) return 15;
+			return 16;
 		}
 	}
 }
